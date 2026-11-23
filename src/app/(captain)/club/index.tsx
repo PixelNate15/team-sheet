@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
@@ -9,7 +10,7 @@ import { Card } from '@/components/Card';
 import { Hero } from '@/components/Hero';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { regenerateJoinCode } from '@/lib/api';
+import { fetchDivisions, regenerateJoinCode } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { APP_NAME } from '@/lib/config';
 import { errorMessage } from '@/lib/errors';
@@ -19,6 +20,7 @@ import { space, useTheme } from '@/theme';
 export default function Club() {
   const { c } = useTheme();
   const { club, isAdmin, me, refreshMe } = useSignedIn();
+  const divisions = useQuery({ queryKey: ['divisions', club.id], queryFn: () => fetchDivisions(club.id) });
 
   async function copy() {
     await Clipboard.setStringAsync(club.join_code);
@@ -58,6 +60,26 @@ export default function Club() {
           {isAdmin ? <Button title="New code" icon="refresh" size="sm" variant="secondary" style={{ flex: 1 }} onPress={regenerate} /> : null}
         </View>
       </Hero>
+
+      <SectionHeader title="League tables" />
+      {(divisions.data ?? []).length === 0 ? (
+        <Text variant="small" color="textMuted">
+          {divisions.isPending ? 'Loading divisions…' : 'No divisions yet. A club admin can add them under Seasons & divisions.'}
+        </Text>
+      ) : (
+        <Card padded={false}>
+          {(divisions.data ?? []).map((d, i) => (
+            <View key={d.id}>
+              {i > 0 ? <View style={[styles.divider, { backgroundColor: c.border }]} /> : null}
+              <Pressable
+                style={styles.row}
+                onPress={() => router.push({ pathname: '/league/[divisionId]', params: { divisionId: String(d.id) } })}>
+                <ListRow icon="podium-outline" title={d.name} subtitle="This season’s table and positions" />
+              </Pressable>
+            </View>
+          ))}
+        </Card>
+      )}
 
       {isAdmin ? (
         <>

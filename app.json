@@ -23,6 +23,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "blockedPermissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
       "package": "uk.co.evolvit.teamsheet"
     },
     "web": {
@@ -48,6 +49,13 @@
         "expo-notifications",
         {
           "color": "#2F7FF0"
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Team Sheet adds your fixtures to your calendar when you ask it to.",
+          "remindersPermission": false
         }
       ]
     ],

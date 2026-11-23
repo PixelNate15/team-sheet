@@ -103,6 +103,7 @@ function RootNavigator() {
         <Stack.Screen name="(member)" />
         <Stack.Screen name="fixture/[id]" options={{ ...header, title: 'Fixture' }} />
         <Stack.Screen name="result/[fixtureId]" options={{ ...header, title: 'Result' }} />
+        <Stack.Screen name="league/[divisionId]" options={{ ...header, title: 'League table' }} />
         <Stack.Screen
           name="availability/[fixtureId]"
           options={{

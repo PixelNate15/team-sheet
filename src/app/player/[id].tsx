@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { View } from 'react-native';
 
 import { Avatar, Chip, ErrorState, InfoRow, Loading, SectionHeader, Stat } from '@/components/Bits';
@@ -7,7 +7,8 @@ import { Card } from '@/components/Card';
 import { LineChart } from '@/components/LineChart';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { fetchClubPlayers, fetchFeedbackReceived, fetchFormHistory } from '@/lib/api';
+import { PartnerStatsList } from '@/components/PartnerStats';
+import { fetchClubPlayers, fetchFeedbackReceived, fetchFormHistory, fetchPartnerStats } from '@/lib/api';
 import { formatForm, fullDate, fullName, parseDate } from '@/lib/format';
 import { useRefreshAll } from '@/lib/hooks';
 import { space } from '@/theme';
@@ -19,6 +20,7 @@ export default function PlayerDetail() {
   const players = useQuery({ queryKey: ['clubPlayers'], queryFn: fetchClubPlayers });
   const form = useQuery({ queryKey: ['formHistory', id], queryFn: () => fetchFormHistory(id) });
   const feedback = useQuery({ queryKey: ['feedbackReceived', id, 10], queryFn: () => fetchFeedbackReceived(id, 10) });
+  const partners = useQuery({ queryKey: ['partnerStats', id], queryFn: () => fetchPartnerStats(id) });
 
   const p = players.data?.find((x) => x.user_id === id);
   if (players.isPending) return <Loading />;
@@ -70,6 +72,16 @@ export default function PlayerDetail() {
           last
         />
       </Card>
+
+      <SectionHeader title="Partners" />
+      {partners.error ? (
+        <ErrorState error={partners.error} onRetry={() => partners.refetch()} />
+      ) : partners.data ? (
+        <PartnerStatsList
+          stats={partners.data}
+          onPressPartner={(pid) => router.push({ pathname: '/player/[id]', params: { id: pid } })}
+        />
+      ) : null}
 
       <SectionHeader title="Form over 10 weeks" />
       <Card>

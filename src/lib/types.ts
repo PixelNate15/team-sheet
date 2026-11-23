@@ -247,3 +247,63 @@ export interface FormPoint {
   week_date: string;
   form: number | null;
 }
+
+// ---------------------------------------------------------------- feature batch 1
+// (20261124000001_features.sql)
+
+/** public.partner_stats: one row per partner, best win % first. */
+export interface PartnerStat {
+  partner_id: string;
+  first_name: string;
+  surname: string;
+  rubbers: number;
+  wins: number;
+  win_percentage: number;
+  games_won: number;
+  games_lost: number;
+  last_played: string;
+}
+
+/** public.squad_pairings: each pair once; pairs with 2+ rubbers first. */
+export interface SquadPairing {
+  player_1_id: string;
+  player_1_name: string;
+  player_2_id: string;
+  player_2_name: string;
+  rubbers: number;
+  wins: number;
+  win_percentage: number;
+  games_won: number;
+  games_lost: number;
+  last_played: string;
+}
+
+/** public.opponent_record: head-to-head against each opponent club. */
+export interface OpponentRecord {
+  opponent_name: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  rubbers_won: number;
+  rubbers_lost: number;
+  last_played: string;
+}
+
+/** public.league_table: the current season's table, top first. */
+export interface LeagueRow {
+  position: number;
+  team_name: string;
+  played: number;
+  points: number;
+  is_own_team: boolean;
+  updated_at: string;
+}
+
+/** What save_league_table takes: rows in table order (position = index + 1). */
+export interface LeagueRowInput {
+  team_name: string;
+  played: number;
+  points: number;
+  is_own_team: boolean;
+}

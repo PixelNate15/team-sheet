@@ -10,6 +10,7 @@ import { TeamSheet } from '@/components/TeamSheet';
 import { Text } from '@/components/Text';
 import { chaseAvailability, fetchFixture, fetchFixtureAvailability, fetchFixtureTeam, removeFixture } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
+import { addFixtureToCalendar, calendarAvailable } from '@/lib/calendar';
 import { errorMessage } from '@/lib/errors';
 import { daysUntil, fullName, longDate, shortTime } from '@/lib/format';
 import { confirm, useMyFixtures, useRefreshAll } from '@/lib/hooks';
@@ -103,12 +104,38 @@ export default function FixtureDetail() {
               </Text>
             }
           />
-          {f.divisions?.name ? <InfoRow icon="podium-outline" label="Division" value={f.divisions.name} /> : null}
+          {f.divisions?.name && f.division_id ? (
+            <InfoRow
+              icon="podium-outline"
+              label="Division"
+              value={
+                <Text
+                  variant="bodyBold"
+                  color="accent"
+                  accessibilityRole="link"
+                  onPress={() => router.push({ pathname: '/league/[divisionId]', params: { divisionId: String(f.division_id) } })}>
+                  {f.divisions.name} · table
+                </Text>
+              }
+            />
+          ) : null}
           {f.opponent_league_position ? (
             <InfoRow icon="stats-chart-outline" label="Their position" value={ordinal(f.opponent_league_position)} />
           ) : null}
           {f.notes ? <InfoRow icon="document-text-outline" label="Notes" value={f.notes} last /> : null}
         </View>
+        {calendarAvailable && !isPast ? (
+          <Button
+            title="Add to calendar"
+            icon="calendar-outline"
+            variant="secondary"
+            size="sm"
+            style={{ marginTop: space.md }}
+            onPress={() =>
+              addFixtureToCalendar(f).catch((e) => Alert.alert('Couldn’t open your calendar', errorMessage(e)))
+            }
+          />
+        ) : null}
       </Card>
 
       <SectionHeader title="Team" />

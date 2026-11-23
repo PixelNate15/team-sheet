@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
@@ -7,9 +7,10 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Avatar, Chip, ListRow, SectionHeader } from '@/components/Bits';
 import { Card } from '@/components/Card';
 import { Segmented, SwitchRow } from '@/components/Field';
+import { PartnerStatsList } from '@/components/PartnerStats';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { deleteMyAccount, leaveClub, updateProfile } from '@/lib/api';
+import { deleteMyAccount, fetchPartnerStats, leaveClub, updateProfile } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { PRIVACY_POLICY_URL, SUPPORT_EMAIL } from '@/lib/config';
 import { errorMessage } from '@/lib/errors';
@@ -24,6 +25,7 @@ export default function Me() {
   const qc = useQueryClient();
   const { me, club, membership, userId, canCaptain, isAdmin, signOut, refreshMe } = useSignedIn();
   const injury = useMyInjury();
+  const partners = useQuery({ queryKey: ['partnerStats', userId], queryFn: () => fetchPartnerStats(userId) });
   const squad = me.squads.find((s) => s.id === me.mySquadId);
 
   const patch = useMutation({
@@ -115,6 +117,9 @@ export default function Me() {
           }
         />
       </Card>
+
+      <SectionHeader title="My partnerships" />
+      {partners.data ? <PartnerStatsList stats={partners.data} /> : null}
 
       <SectionHeader title="Appearance" />
       <Segmented<ThemePref>

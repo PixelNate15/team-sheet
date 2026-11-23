@@ -5,10 +5,11 @@ import { View } from 'react-native';
 import { Chip, EmptyState, ErrorState, SectionHeader, Skeleton, Stat } from '@/components/Bits';
 import { Card } from '@/components/Card';
 import { DateBlock, FixtureCard } from '@/components/FixtureCard';
+import { OpponentRecordList, PairingsList } from '@/components/PartnerStats';
 import { Screen } from '@/components/Screen';
 import { SquadSwitcher } from '@/components/SquadSwitcher';
 import { Text } from '@/components/Text';
-import { fetchFixturesNeedingResults, fetchSquadResults } from '@/lib/api';
+import { fetchFixturesNeedingResults, fetchOpponentRecord, fetchSquadPairings, fetchSquadResults } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { fullDate } from '@/lib/format';
 import { useRefreshAll } from '@/lib/hooks';
@@ -21,6 +22,8 @@ export default function Scores() {
   const squadId = activeSquad?.id;
   const needs = useQuery({ queryKey: ['needsResults', squadId], queryFn: () => fetchFixturesNeedingResults(squadId!), enabled: !!squadId });
   const results = useQuery({ queryKey: ['squadResults', squadId], queryFn: () => fetchSquadResults(squadId!), enabled: !!squadId });
+  const pairings = useQuery({ queryKey: ['squadPairings', squadId], queryFn: () => fetchSquadPairings(squadId!), enabled: !!squadId });
+  const opponents = useQuery({ queryKey: ['opponentRecord', squadId], queryFn: () => fetchOpponentRecord(squadId!), enabled: !!squadId });
 
   const list = results.data ?? [];
   const won = list.filter((r) => r.sets_won > r.sets_lost).length;
@@ -95,6 +98,20 @@ export default function Scores() {
           })}
         </>
       )}
+
+      {pairings.data && pairings.data.length > 0 ? (
+        <>
+          <SectionHeader title="Best pairings" />
+          <PairingsList pairings={pairings.data} />
+        </>
+      ) : null}
+
+      {opponents.data && opponents.data.length > 0 ? (
+        <>
+          <SectionHeader title="Head-to-head" />
+          <OpponentRecordList records={opponents.data} />
+        </>
+      ) : null}
     </Screen>
   );
 }

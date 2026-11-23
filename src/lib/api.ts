@@ -13,17 +13,22 @@ import type {
   FixtureNeedingResult,
   FixtureRow,
   FormPoint,
+  LeagueRow,
+  LeagueRowInput,
   Injury,
   MatchRow,
   Membership,
   MyFixture,
   MyResult,
+  OpponentRecord,
+  PartnerStat,
   Profile,
   RecommendedPlayer,
   Season,
   SelectedPlayer,
   Squad,
   SquadFixture,
+  SquadPairing,
   SquadResult,
 } from './types';
 
@@ -323,3 +328,14 @@ export async function removeMember(clubId: number, userId: string) {
 export async function renameClub(clubId: number, name: string) {
   unwrap(await supabase.from('clubs').update({ name: name.trim() }).eq('id', clubId));
 }
+
+// ---------------------------------------------------------------- stats & league table
+export const fetchPartnerStats = (userId: string) => rpc<PartnerStat[]>('partner_stats', { p_user: userId });
+export const fetchSquadPairings = (squadId: number) => rpc<SquadPairing[]>('squad_pairings', { p_squad: squadId });
+export const fetchOpponentRecord = (squadId: number) => rpc<OpponentRecord[]>('opponent_record', { p_squad: squadId });
+
+export const fetchLeagueTable = (divisionId: number) => rpc<LeagueRow[]>('league_table', { p_division: divisionId });
+export const canManageDivision = (divisionId: number) => rpc<boolean>('can_manage_division', { p_division: divisionId });
+/** Returns how many upcoming fixtures had their opponent's league position updated. */
+export const saveLeagueTable = (divisionId: number, rows: LeagueRowInput[]) =>
+  rpc<number>('save_league_table', { p_division: divisionId, p_rows: rows });
