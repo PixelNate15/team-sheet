@@ -41,3 +41,10 @@ example
 # generated native folders
 /ios
 /android
+
+# Supabase keys live in .env (never commit it)
+.env
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/

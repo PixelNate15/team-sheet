@@ -1,0 +1,325 @@
+/**
+ * Data access. Each function maps to a module of Original_Code/SQL/*.py,
+ * but runs through Supabase (Row Level Security + RPC functions) instead of
+ * a direct MariaDB connection.
+ */
+import { supabase } from './supabase';
+import type {
+  AvailabilityReply,
+  AvailablePlayer,
+  ClubPlayer,
+  Division,
+  Feedback,
+  FixtureNeedingResult,
+  FixtureRow,
+  FormPoint,
+  Injury,
+  MatchRow,
+  Membership,
+  MyFixture,
+  MyResult,
+  Profile,
+  RecommendedPlayer,
+  Season,
+  SelectedPlayer,
+  Squad,
+  SquadFixture,
+  SquadResult,
+} from './types';
+
+async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(fn, args);
+  if (error) throw error;
+  return data as T;
+}
+
+function unwrap<T>(res: { data: unknown; error: unknown }): T {
+  if (res.error) throw res.error;
+  return res.data as T;
+}
+
+// ---------------------------------------------------------------- me / club
+export interface Me {
+  profile: Profile;
+  membership: Membership | null;
+  squads: Squad[];
+  mySquadId: number | null;
+}
+
+export async function fetchMe(userId: string): Promise<Me> {
+  const [profileRes, memberRes, squadRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', userId).single(),
+    supabase
+      .from('club_members')
+      .select('club_id, role, club:clubs(id, name, join_code)')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    supabase.from('squad_players').select('squad_id').eq('user_id', userId).maybeSingle(),
+  ]);
+  const profile = unwrap<Profile>(profileRes);
+  const membership = unwrap<Membership | null>(memberRes);
+  const mySquad = unwrap<{ squad_id: number } | null>(squadRes);
+
+  let squads: Squad[] = [];
+  if (membership) {
+    squads = unwrap<Squad[]>(
+      await supabase.from('squads').select('*').eq('club_id', membership.club_id).order('ranking'),
+    );
+  }
+  return { profile, membership, squads, mySquadId: mySquad?.squad_id ?? null };
+}
+
+export async function updateProfile(userId: string, patch: Partial<Profile>) {
+  unwrap(await supabase.from('profiles').update(patch).eq('id', userId));
+}
+
+export const createClub = (args: {
+  clubName: string;
+  seasonName: string;
+  squadName: string;
+  divisionName: string;
+  teamCount: number;
+}) =>
+  rpc<number>('create_club', {
+    p_club_name: args.clubName,
+    p_season_name: args.seasonName,
+    p_squad_name: args.squadName,
+    p_division_name: args.divisionName,
+    p_team_count: args.teamCount,
+  });
+
+export const joinClub = (code: string) => rpc<number>('join_club', { p_code: code });
+export const regenerateJoinCode = () => rpc<string>('regenerate_join_code');
+export const leaveClub = () => rpc<void>('leave_club');
+export const deleteMyAccount = () => rpc<void>('delete_my_account');
+
+// ---------------------------------------------------------------- fixtures (member)
+export const fetchMyFixtures = () => rpc<MyFixture[]>('my_fixtures');
+
+export async function fetchFixture(id: number): Promise<FixtureRow> {
+  return unwrap<FixtureRow>(
+    await supabase
+      .from('fixtures')
+      .select('*, divisions(name), squads(name)')
+      .eq('id', id)
+      .single(),
+  );
+}
+
+export async function fetchFixtureTeam(id: number): Promise<SelectedPlayer[]> {
+  return unwrap<SelectedPlayer[]>(
+    await supabase
+      .from('team_selection_players')
+      .select('user_id, pair_number, selection_order, profiles(first_name, surname)')
+      .eq('fixture_id', id)
+      .order('pair_number')
+      .order('selection_order'),
+  );
+}
+
+// ---------------------------------------------------------------- availability
+export async function setAvailability(fixtureId: number, userId: string, isAvailable: boolean, reason?: string) {
+  unwrap(
+    await supabase.from('availability').upsert({
+      fixture_id: fixtureId,
+      user_id: userId,
+      is_available: isAvailable,
+      reason: isAvailable ? null : reason?.trim() || null,
+      submitted_at: new Date().toISOString(),
+    }),
+  );
+}
+
+export const fetchFixtureAvailability = (fixtureId: number) =>
+  rpc<AvailabilityReply[]>('fixture_availability', { p_fixture: fixtureId });
+
+export const chaseAvailability = (fixtureId: number) => rpc<number>('chase_availability', { p_fixture: fixtureId });
+
+// ---------------------------------------------------------------- injury
+export async function fetchCurrentInjury(userId: string): Promise<Injury | null> {
+  return unwrap<Injury | null>(
+    await supabase.from('injuries').select('*').eq('user_id', userId).eq('is_current', true).maybeSingle(),
+  );
+}
+
+export async function saveInjury(
+  userId: string,
+  existingId: number | null,
+  v: { description: string; expected_end_date: string; can_play: boolean; notes: string },
+) {
+  const row = {
+    description: v.description.trim(),
+    expected_end_date: v.expected_end_date,
+    can_play: v.can_play,
+    notes: v.notes.trim() || null,
+  };
+  if (existingId) {
+    unwrap(await supabase.from('injuries').update(row).eq('id', existingId));
+  } else {
+    unwrap(await supabase.from('injuries').insert({ ...row, user_id: userId, is_current: true }));
+  }
+}
+
+/** Mark recovered: keeps the injury history (the original deleted it). */
+export async function endInjury(injuryId: number) {
+  unwrap(
+    await supabase
+      .from('injuries')
+      .update({ is_current: false, ended_on: new Date().toISOString().slice(0, 10) })
+      .eq('id', injuryId),
+  );
+}
+
+// ---------------------------------------------------------------- results
+export const fetchMyResults = () => rpc<MyResult[]>('my_results');
+
+export async function fetchFixtureMatches(fixtureId: number): Promise<MatchRow[]> {
+  return unwrap<MatchRow[]>(
+    await supabase
+      .from('matches')
+      .select(
+        '*, match_players(user_id, partner_user_id, profiles!match_players_user_id_fkey(first_name, surname))',
+      )
+      .eq('fixture_id', fixtureId)
+      .order('rubber_number'),
+  );
+}
+
+export const saveFixtureResult = (
+  fixtureId: number,
+  matches: {
+    rubber_number: number;
+    player_1: string;
+    player_2: string;
+    set_1_won: number;
+    set_1_lost: number;
+    set_2_won: number;
+    set_2_lost: number;
+    champ_tie: 'W' | 'L' | null;
+  }[],
+) => rpc<void>('save_fixture_result', { p_fixture: fixtureId, p_matches: matches });
+
+// ---------------------------------------------------------------- feedback
+const feedbackSelect = '*, matches(fixture_id, match_date, fixtures(opponent_name, is_home))';
+
+export async function fetchFeedbackReceived(userId: string, limit = 50): Promise<Feedback[]> {
+  return unwrap<Feedback[]>(
+    await supabase
+      .from('partner_feedback')
+      .select(feedbackSelect)
+      .eq('reviewed_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit),
+  );
+}
+
+export async function fetchFeedbackForFixture(userId: string, fixtureId: number): Promise<Feedback[]> {
+  return unwrap<Feedback[]>(
+    await supabase
+      .from('partner_feedback')
+      .select('*, matches!inner(fixture_id, match_date, fixtures(opponent_name, is_home))')
+      .eq('reviewed_id', userId)
+      .eq('matches.fixture_id', fixtureId),
+  );
+}
+
+export async function submitFeedback(v: {
+  match_id: number;
+  reviewer_id: string;
+  reviewed_id: string;
+  overall_rating: number;
+  key_moments_rating: number;
+  communication_rating: number;
+  comments: string;
+}) {
+  unwrap(await supabase.from('partner_feedback').insert({ ...v, comments: v.comments.trim() || null }));
+}
+
+// ---------------------------------------------------------------- captain
+export const fetchClubPlayers = () => rpc<ClubPlayer[]>('club_players');
+export const fetchSquadFixtures = (squadId: number) => rpc<SquadFixture[]>('squad_fixtures', { p_squad: squadId });
+export const fetchFixturesNeedingResults = (squadId: number) =>
+  rpc<FixtureNeedingResult[]>('fixtures_needing_results', { p_squad: squadId });
+export const fetchSquadResults = (squadId: number) => rpc<SquadResult[]>('squad_results', { p_squad: squadId });
+export const fetchRecommendedTeam = (fixtureId: number) =>
+  rpc<RecommendedPlayer[]>('recommended_team', { p_fixture: fixtureId });
+export const fetchAvailablePlayers = (fixtureId: number) =>
+  rpc<AvailablePlayer[]>('available_players', { p_fixture: fixtureId });
+export const fetchFormHistory = (userId: string) => rpc<FormPoint[]>('form_history', { p_user: userId });
+
+export const saveFixture = (v: {
+  fixtureId: number | null;
+  squadId: number;
+  opponentName: string;
+  fixtureDate: string;
+  startTime: string;
+  location: string;
+  isHome: boolean;
+  leaguePosition: number | null;
+  notes: string;
+  players: { user_id: string; pair_number: number; selection_order: number }[] | null;
+}) =>
+  rpc<number>('save_fixture', {
+    p_fixture_id: v.fixtureId,
+    p_squad_id: v.squadId,
+    p_opponent_name: v.opponentName,
+    p_fixture_date: v.fixtureDate,
+    p_start_time: v.startTime,
+    p_location: v.location,
+    p_is_home: v.isHome,
+    p_league_position: v.leaguePosition,
+    p_notes: v.notes,
+    p_players: v.players,
+  });
+
+export const removeFixture = (fixtureId: number) => rpc<void>('remove_fixture', { p_fixture: fixtureId });
+export const addPlayersToSquad = (squadId: number, userIds: string[]) =>
+  rpc<number>('add_players_to_squad', { p_squad: squadId, p_users: userIds });
+export const movePlayerDown = (userId: string) => rpc<string | null>('move_player_down', { p_user: userId });
+
+// ---------------------------------------------------------------- club admin
+export const adminSetPlayerSquad = (userId: string, squadId: number | null) =>
+  rpc<void>('admin_set_player_squad', { p_user: userId, p_squad: squadId });
+export const setCurrentSeason = (seasonId: number) => rpc<void>('set_current_season', { p_season: seasonId });
+
+export async function fetchSeasons(clubId: number): Promise<Season[]> {
+  return unwrap<Season[]>(await supabase.from('seasons').select('*').eq('club_id', clubId).order('id', { ascending: false }));
+}
+
+export async function createSeason(clubId: number, name: string) {
+  unwrap(await supabase.from('seasons').insert({ club_id: clubId, name: name.trim(), is_current: false }));
+}
+
+export async function fetchDivisions(clubId: number): Promise<Division[]> {
+  return unwrap<Division[]>(await supabase.from('divisions').select('*').eq('club_id', clubId).order('name'));
+}
+
+export async function createDivision(clubId: number, name: string, teamCount: number) {
+  unwrap(await supabase.from('divisions').insert({ club_id: clubId, name: name.trim(), team_count: teamCount }));
+}
+
+export async function createSquad(clubId: number, name: string, ranking: number, divisionId: number | null) {
+  unwrap(
+    await supabase.from('squads').insert({ club_id: clubId, name: name.trim(), ranking, division_id: divisionId }),
+  );
+}
+
+export async function updateSquad(squadId: number, patch: Partial<Pick<Squad, 'name' | 'division_id' | 'captain_id'>>) {
+  unwrap(await supabase.from('squads').update(patch).eq('id', squadId));
+}
+
+export async function deleteSquad(squadId: number) {
+  unwrap(await supabase.from('squads').delete().eq('id', squadId));
+}
+
+export async function setMemberRole(clubId: number, userId: string, role: 'member' | 'admin') {
+  unwrap(await supabase.from('club_members').update({ role }).eq('club_id', clubId).eq('user_id', userId));
+}
+
+export async function removeMember(clubId: number, userId: string) {
+  unwrap(await supabase.from('club_members').delete().eq('club_id', clubId).eq('user_id', userId));
+}
+
+export async function renameClub(clubId: number, name: string) {
+  unwrap(await supabase.from('clubs').update({ name: name.trim() }).eq('id', clubId));
+}
