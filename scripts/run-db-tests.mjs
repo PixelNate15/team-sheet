@@ -1,19 +1,19 @@
 // Runs the pgTAP tests in supabase/tests/database against a Supabase
 // database without Docker (the Supabase CLI's `test db` needs Docker).
 //
-//   SUPABASE_DB_URL="postgresql://postgres.<ref>:<password>@<pooler-host>:5432/postgres" npm run test:db
+//   npm run test:db
 //
+// The connection comes from scripts/db-url.mjs (SUPABASE_DB_PASSWORD in .env,
+// or SUPABASE_DB_URL), so the password is never typed on the command line.
 // Each test file runs inside its own transaction and rolls back, so no test
 // data is left behind.
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pg from 'pg';
 
-const url = process.env.SUPABASE_DB_URL;
-if (!url) {
-  console.error('Set SUPABASE_DB_URL to the session pooler connection string (with your password).');
-  process.exit(2);
-}
+import { dbConnection, mask } from './db-url.mjs';
+
+const { url, secret } = dbConnection();
 
 const dir = 'supabase/tests/database';
 const files = readdirSync(dir).filter((f) => f.endsWith('.sql')).sort();
@@ -37,7 +37,7 @@ for (const file of files) {
       }
     }
   } catch (e) {
-    console.log(`not ok - ${file} stopped with an error: ${e.message}`);
+    console.log(`not ok - ${file} stopped with an error: ${mask(e.message, secret)}`);
     failures++;
   } finally {
     await client.end(); // an unfinished transaction is rolled back when the connection closes

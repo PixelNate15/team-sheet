@@ -58,7 +58,8 @@
     "lint": "expo lint",
     "test": "jest",
     "typecheck": "tsc --noEmit",
-    "test:db": "node scripts/run-db-tests.mjs"
+    "test:db": "node scripts/run-db-tests.mjs",
+    "db:push": "node scripts/db-push.mjs"
   },
   "private": true,
   "jest": {

@@ -42,8 +42,11 @@ example
 /ios
 /android
 
-# Supabase keys live in .env (never commit it)
+# Supabase keys and the database password live in .env (never commit it).
+# Ignore every variant (.env.production, .env.development, ...) except the template.
 .env
+.env.*
+!.env.example
 
 # Supabase CLI local state
 supabase/.temp/
