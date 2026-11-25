@@ -80,6 +80,9 @@ grant usage on schema tests to authenticated;
 grant execute on function tests.login(uuid) to authenticated;
 
 -- ------------------------------------------------------------- reminders (as the scheduler)
+-- The job looks at every club, so set aside other clubs' fixtures (real or sample
+-- data) for these checks. The whole file is rolled back, so nothing is really deleted.
+delete from public.fixtures where club_id <> 9501;
 select is(public.send_availability_reminders(), 4,
   'reminders go to non-responders 5 days (3) and 2 days (1) before a fixture');
 select is(public.send_availability_reminders(current_date + 1), 5,

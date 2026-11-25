@@ -74,6 +74,8 @@ npm run db:push         # apply the database migrations
 npx expo start
 ```
 
+To try it with realistic sample data (made-up players, fixtures, results and a league table), run `npm run db:seed`, and `npm run db:unseed` to remove it.
+
 Checks: `npm run typecheck`, `npx expo lint`, `npm test` and `npm run test:db`. Calendar export and push notifications need a development build. Only the publishable key goes in the app; secret keys and database passwords never do.
 
 </details>

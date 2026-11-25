@@ -62,7 +62,9 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "test:db": "node scripts/run-db-tests.mjs",
-    "db:push": "node scripts/db-push.mjs"
+    "db:push": "node scripts/db-push.mjs",
+    "db:seed": "node scripts/run-sql.mjs supabase/seed/test-data.sql",
+    "db:unseed": "node scripts/run-sql.mjs supabase/seed/remove-test-data.sql"
   },
   "private": true,
   "jest": {
