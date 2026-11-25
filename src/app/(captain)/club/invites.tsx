@@ -2,9 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 import { useMemo, useState } from 'react';
-import { Alert, Share, View } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
 
-import { Chip, EmptyState, SectionHeader } from '@/components/Bits';
+import { useActionSheet } from '@/components/ActionSheet';
+import { Chip, EmptyState, ListRow, SectionHeader } from '@/components/Bits';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TextField } from '@/components/Field';
@@ -15,7 +16,8 @@ import { useSignedIn } from '@/lib/auth';
 import { parsePlayerCsv } from '@/lib/csv';
 import { errorMessage } from '@/lib/errors';
 import { confirm } from '@/lib/hooks';
-import { space } from '@/theme';
+import type { ClubInvite } from '@/lib/types';
+import { space, useTheme } from '@/theme';
 
 const EXAMPLE = 'First name,Surname,Email,Team\nTom,Reid,tom@example.com,1st Team';
 
@@ -26,7 +28,9 @@ const EXAMPLE = 'First name,Surname,Email,Team\nTom,Reid,tom@example.com,1st Tea
  */
 export default function InvitesScreen() {
   const qc = useQueryClient();
+  const { c } = useTheme();
   const { club, me } = useSignedIn();
+  const [sheet, showSheet] = useActionSheet();
   const [text, setText] = useState('');
 
   const invites = useQuery({ queryKey: ['invites', club.id], queryFn: () => fetchClubInvites(club.id) });
@@ -78,11 +82,51 @@ export default function InvitesScreen() {
     onError: (e) => Alert.alert('Couldn’t remove', errorMessage(e)),
   });
 
+  const changeTeam = useMutation({
+    mutationFn: (v: { invite: ClubInvite; squadId: number | null }) =>
+      importInvites([
+        { email: v.invite.email, first_name: v.invite.first_name ?? '', surname: v.invite.surname ?? '', squad_id: v.squadId },
+      ]),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['invites', club.id] }),
+    onError: (e) => Alert.alert('Couldn’t change the team', errorMessage(e)),
+  });
+
+  const shareInvite = (i: ClubInvite) =>
+    Share.share({
+      message:
+        `${i.first_name ? `Hi ${i.first_name}, you` : 'You'}’ve been added to ${club.name} on Team Sheet` +
+        `${i.squads?.name ? ` (${i.squads.name})` : ''}. Download the app and sign up with ${i.email}: ` +
+        `you’ll be put straight into the club. If it asks for a club code, it’s ${club.join_code}.`,
+    });
+
+  function inviteActions(i: ClubInvite) {
+    const name = [i.first_name, i.surname].filter(Boolean).join(' ') || i.email;
+    showSheet(name, [
+      { text: 'Send them the invite', onPress: () => shareInvite(i) },
+      {
+        text: 'Change team',
+        onPress: () =>
+          showSheet(`Team for ${name}`, [
+            ...me.squads.map((sq) => ({ text: sq.name, onPress: () => changeTeam.mutate({ invite: i, squadId: sq.id }) })),
+            { text: 'No team', onPress: () => changeTeam.mutate({ invite: i, squadId: null }) },
+          ]),
+      },
+      {
+        text: 'Remove invite',
+        destructive: true,
+        onPress: async () => {
+          if (await confirm('Remove this invite?', `${i.email} won’t be added to the club automatically.`)) remove.mutate(i.id);
+        },
+      },
+    ], `Waiting for them to sign up with ${i.email}`);
+  }
+
   const pending = (invites.data ?? []).filter((i) => !i.accepted_at);
   const joined = (invites.data ?? []).filter((i) => i.accepted_at);
 
   return (
     <Screen>
+      {sheet}
       <Text variant="body" color="textMuted">
         Add a list of players with their email addresses. When someone signs up with that email, Team Sheet puts them
         straight into {club.name} and their team.
@@ -165,32 +209,33 @@ export default function InvitesScreen() {
       {pending.length === 0 ? (
         <EmptyState icon="mail-outline" title="No pending invites" message="Imported players appear here until they join." />
       ) : (
-        <Card>
-          <View style={{ gap: space.md }}>
-            {pending.map((i) => (
-              <View key={i.id} style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-                <View style={{ flex: 1 }}>
-                  <Text variant="bodyBold" numberOfLines={1}>
-                    {[i.first_name, i.surname].filter(Boolean).join(' ') || i.email}
-                  </Text>
-                  <Text variant="small" color="textMuted" numberOfLines={1}>
-                    {i.email}
-                    {i.squads?.name ? ` · ${i.squads.name}` : ''}
-                  </Text>
+        <>
+          <Text variant="small" color="textMuted">
+            These players haven’t signed up yet. They’ll join automatically when they sign up with the email shown. Tap
+            one to send them the invite, change their team or remove it.
+          </Text>
+          <Card padded={false}>
+            {pending.map((i, n) => {
+              const name = [i.first_name, i.surname].filter(Boolean).join(' ');
+              return (
+                <View key={i.id}>
+                  {n > 0 ? <View style={[styles.divider, { backgroundColor: c.border }]} /> : null}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`${name || i.email}, invite pending. Tap for options.`}
+                    onPress={() => inviteActions(i)}
+                    style={({ pressed }) => [styles.row, pressed && { backgroundColor: c.surfaceAlt }]}>
+                    <ListRow
+                      icon="mail-outline"
+                      title={name || i.email}
+                      subtitle={`${name ? `${i.email} · ` : ''}${i.squads?.name ?? 'No team'} · waiting`}
+                    />
+                  </Pressable>
                 </View>
-                <Text
-                  variant="smallBold"
-                  color="danger"
-                  accessibilityRole="button"
-                  onPress={async () => {
-                    if (await confirm('Remove this invite?', `${i.email} won’t be added automatically.`)) remove.mutate(i.id);
-                  }}>
-                  Remove
-                </Text>
-              </View>
-            ))}
-          </View>
-        </Card>
+              );
+            })}
+          </Card>
+        </>
       )}
 
       {joined.length ? (
@@ -201,3 +246,8 @@ export default function InvitesScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  row: { padding: space.lg },
+  divider: { height: StyleSheet.hairlineWidth, marginLeft: 64 },
+});
