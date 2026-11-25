@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
+import { Platform } from 'react-native';
 
 import { emailLinksReach } from './email-links';
 import { supabase } from './supabase';
@@ -7,28 +8,50 @@ import { supabase } from './supabase';
 /**
  * Where Supabase's email links (sign-up confirmation, password reset) send
  * the user back to: the app's own auth-callback screen.
- *   Expo Go:     exp://<computer-ip>:8081/--/auth-callback  (LAN)
- *                exps://<id>.on.expo.app/--/auth-callback    (`npm run start:tunnel`, HTTPS)
  *   Real build:  teamsheet://auth-callback
- * All three schemes must be in Supabase → Authentication → URL Configuration → Redirect URLs
- * (`exp://**`, `exps://**`, `teamsheet://**`), otherwise Supabase falls back to the Site URL.
- * Supabase never redirects to a raw IP address, even when `exp://**` is allowed, so
- * test email links in Expo Go with the tunnel (or in a development build).
+ *   Expo Go:     exps://<id>.on.expo.app/--/auth-callback  (`npm run start:tunnel`)
+ * Redirect URLs `exp://**`, `exps://**` and `teamsheet://**` must be allowed in
+ * Supabase → Authentication → URL Configuration, or links fall back to the Site URL.
+ *
+ * Supabase never redirects to an IP address. Expo Go may reach the dev server by
+ * its Wi-Fi IP even in tunnel mode (e.g. from its Development servers list), and
+ * then rewrites the app's own addresses to that IP. In that case we ask the dev
+ * server for its manifest, which still names the tunnel, and use that instead.
  */
-export function authRedirectUrl() {
+export async function authRedirectUrl(): Promise<string> {
   const url = Linking.createURL('auth-callback');
   if (emailLinksReach(url)) return url;
-  // Expo Go reached the dev server over the local network (an IP address, which
-  // Supabase won't redirect to). In tunnel mode the app config still names the
-  // tunnel, which serves the same server, so send email links there instead.
-  const tunnelHost = Constants.expoConfig?.hostUri?.replace(/\/.*$/, '');
-  if (tunnelHost && emailLinksReach(`exps://${tunnelHost}`)) return `exps://${tunnelHost}/--/auth-callback`;
-  return url;
+  const tunnel = (await devServerTunnelHost(url)) ?? sameConfigTunnelHost();
+  return tunnel ? `exps://${tunnel}/--/auth-callback` : url;
 }
 
 /** False when Supabase can't send email links back to this session (see email-links.ts). */
-export function emailLinksReachThisApp() {
-  return emailLinksReach(authRedirectUrl());
+export async function emailLinksReachThisApp() {
+  return emailLinksReach(await authRedirectUrl());
+}
+
+function tunnelHostOrNull(host: string | null | undefined) {
+  const h = host?.replace(/\/.*$/, '');
+  return h && emailLinksReach(`exps://${h}`) ? h : null;
+}
+
+function sameConfigTunnelHost() {
+  return tunnelHostOrNull(Constants.expoConfig?.hostUri);
+}
+
+/** Development only: read the tunnel's host from the dev server's own manifest. */
+async function devServerTunnelHost(url: string): Promise<string | null> {
+  const server = url.match(/^exps?:\/\/([^/]+)/)?.[1];
+  if (!__DEV__ || !server) return null;
+  try {
+    const res = await fetch(`http://${server}/`, {
+      headers: { Accept: 'application/expo+json', 'expo-platform': Platform.OS },
+    });
+    const manifest = (await res.json()) as { extra?: { expoClient?: { hostUri?: string } } };
+    return tunnelHostOrNull(manifest.extra?.expoClient?.hostUri);
+  } catch {
+    return null;
+  }
 }
 
 export type AuthLinkResult =

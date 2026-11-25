@@ -64,7 +64,7 @@ export default function SignUp() {
       options: {
         data: { first_name: parsed.data.firstName, surname: parsed.data.surname },
         // The confirmation link opens the app, which signs the player straight in.
-        emailRedirectTo: authRedirectUrl(),
+        emailRedirectTo: await authRedirectUrl(),
       },
     });
     setBusy(false);

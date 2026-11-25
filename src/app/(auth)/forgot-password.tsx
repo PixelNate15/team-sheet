@@ -32,7 +32,7 @@ export default function ForgotPassword() {
     }
     setBusy(true);
     setError(null);
-    const { error: e } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: authRedirectUrl() });
+    const { error: e } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: await authRedirectUrl() });
     setBusy(false);
     if (e) setError(errorMessage(e));
     else setSent(true);

@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 
-import { authRedirectUrl, emailLinksReachThisApp } from '@/lib/auth-links';
+import { authRedirectUrl } from '@/lib/auth-links';
+import { emailLinksReach } from '@/lib/email-links';
 import { radius, space, useTheme } from '@/theme';
 
 import { Text } from './Text';
@@ -11,7 +13,18 @@ import { Text } from './Text';
  */
 export function EmailLinkWarning() {
   const { c } = useTheme();
-  if (!__DEV__ || emailLinksReachThisApp()) return null;
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!__DEV__) return;
+    let live = true;
+    authRedirectUrl().then((u) => live && setUrl(u));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  if (!__DEV__ || !url || emailLinksReach(url)) return null;
   return (
     <View
       accessibilityRole="alert"
@@ -21,10 +34,10 @@ export function EmailLinkWarning() {
       </Text>
       <Text variant="small" color="text">
         This copy of the app was opened from a local network address, so links in emails go to localhost. Restart with
-        “npm run start:tunnel” and scan the new QR code, then send the email again.
+        “npm run start:tunnel” and open the app again, then send the email again.
       </Text>
       <Text variant="caption" color="textMuted" selectable>
-        {authRedirectUrl()}
+        {url}
       </Text>
     </View>
   );
