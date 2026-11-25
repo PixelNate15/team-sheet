@@ -135,7 +135,10 @@ function FixtureForm({
   // Squad players, annotated with availability for this fixture.
   const candidates: Candidate[] = useMemo(() => {
     const status = new Map((replies.data ?? []).map((r) => [r.user_id, r]));
-    const list = (players.data ?? []).filter((p) => p.squad_id === squadId || slots.includes(p.user_id));
+    // The team's own players, anyone borrowed for this fixture, and anyone already picked.
+    const list = (players.data ?? []).filter(
+      (p) => p.squad_id === squadId || slots.includes(p.user_id) || !!status.get(p.user_id)?.borrowed_from,
+    );
     const rank = { in: 0, injured: 1, waiting: 2, out: 3 } as const;
     return list
       .map((p): Candidate => {
@@ -152,7 +155,8 @@ function FixtureForm({
               : r?.is_available === false
                 ? 'out'
                 : 'waiting';
-        return { user_id: p.user_id, first_name: p.first_name, surname: p.surname, form: p.form, status: st, note: r?.reason ?? null };
+        const note = r?.borrowed_from ? `Playing up from ${r.borrowed_from}` : (r?.reason ?? null);
+        return { user_id: p.user_id, first_name: p.first_name, surname: p.surname, form: p.form, status: st, note };
       })
       .sort((a, b) => (rank[a.status ?? 'waiting'] - rank[b.status ?? 'waiting']) || (b.form ?? -1) - (a.form ?? -1));
   }, [players.data, replies.data, squadId, slots, isNew]);

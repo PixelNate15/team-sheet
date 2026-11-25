@@ -7,6 +7,7 @@ import { supabase } from './supabase';
 import type {
   AvailabilityReply,
   AvailablePlayer,
+  BorrowablePlayer,
   ClubInvite,
   ClubPlayer,
   Division,
@@ -447,3 +448,13 @@ export async function deleteInvite(id: number) {
 
 // ---------------------------------------------------------------- season report
 export const fetchSeasonReport = (seasonId: number) => rpc<SeasonReport>('season_report', { p_season: seasonId });
+
+// ---------------------------------------------------------------- playing up
+/** Most times a player can be borrowed by a higher team in one season (enforced by the database). */
+export const PLAY_UP_LIMIT = 2;
+export const fetchBorrowablePlayers = (fixtureId: number) =>
+  rpc<BorrowablePlayer[]>('borrowable_players', { p_fixture: fixtureId });
+export const borrowPlayer = (fixtureId: number, userId: string) =>
+  rpc<void>('borrow_player', { p_fixture: fixtureId, p_user: userId });
+export const releaseBorrowedPlayer = (fixtureId: number, userId: string) =>
+  rpc<void>('release_borrowed_player', { p_fixture: fixtureId, p_user: userId });

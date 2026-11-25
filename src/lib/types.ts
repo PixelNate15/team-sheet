@@ -62,6 +62,8 @@ export interface MyFixture {
   pair_number: number | null;
   partner_name: string | null;
   team_selected: boolean;
+  /** Playing up for a higher team in this fixture. */
+  is_borrowed: boolean;
 }
 
 export interface FixtureRow {
@@ -228,6 +230,8 @@ export interface AvailabilityReply {
   reason: string | null;
   injury: string | null;
   injury_can_play: boolean | null;
+  /** Name of the lower team this player is borrowed from, if they're playing up. */
+  borrowed_from: string | null;
 }
 
 export interface RecommendedPlayer {
@@ -396,4 +400,16 @@ export interface SeasonReport {
     players: { name: string; fixtures: number; rubbers: number; wins: number; form: number | null }[];
     fees_outstanding_pence: number;
   }[];
+}
+
+export interface BorrowablePlayer {
+  user_id: string;
+  first_name: string;
+  surname: string;
+  squad_name: string;
+  form: number | null;
+  times_played_up: number;
+  limit_reached: boolean;
+  borrowed: boolean;
+  injured: boolean;
 }

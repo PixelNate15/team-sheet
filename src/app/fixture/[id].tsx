@@ -10,7 +10,15 @@ import { LiftsSection } from '@/components/Lifts';
 import { Screen } from '@/components/Screen';
 import { TeamSheet } from '@/components/TeamSheet';
 import { Text } from '@/components/Text';
-import { chaseAvailability, fetchFixture, fetchFixtureAvailability, fetchFixtureMessages, fetchFixtureTeam, removeFixture } from '@/lib/api';
+import {
+  chaseAvailability,
+  fetchFixture,
+  fetchFixtureAvailability,
+  fetchFixtureMessages,
+  fetchFixtureTeam,
+  releaseBorrowedPlayer,
+  removeFixture,
+} from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { addFixtureToCalendar, calendarAvailable } from '@/lib/calendar';
 import { errorMessage } from '@/lib/errors';
@@ -51,6 +59,12 @@ export default function FixtureDetail() {
     mutationFn: () => chaseAvailability(fixtureId),
     onSuccess: (n) => Alert.alert('Reminder sent', n === 0 ? 'Everyone has already replied.' : `Sent to ${n} player${n === 1 ? '' : 's'}.`),
     onError: (e) => Alert.alert('Couldn’t send', errorMessage(e)),
+  });
+
+  const release = useMutation({
+    mutationFn: (playerId: string) => releaseBorrowedPlayer(fixtureId, playerId),
+    onSuccess: () => refresh(),
+    onError: (e) => Alert.alert('Couldn’t release the player', errorMessage(e)),
   });
 
   const remove = useMutation({
@@ -206,6 +220,23 @@ export default function FixtureDetail() {
                   <Avatar userId={r.user_id} first={r.first_name} surname={r.surname} size={36} />
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyBold">{fullName(r)}</Text>
+                    {r.borrowed_from ? (
+                      <Text variant="small" color="accent" numberOfLines={1}>
+                        Playing up from {r.borrowed_from}
+                        {!isPast ? (
+                          <Text
+                            variant="smallBold"
+                            color="danger"
+                            accessibilityRole="button"
+                            onPress={async () => {
+                              if (await confirm('Release this player?', `${r.first_name} goes back to ${r.borrowed_from} and this won’t count towards their limit.`))
+                                release.mutate(r.user_id);
+                            }}>
+                            {'  ·  Release'}
+                          </Text>
+                        ) : null}
+                      </Text>
+                    ) : null}
                     {r.reason || r.injury ? (
                       <Text variant="small" color="textMuted" numberOfLines={1}>
                         {r.injury ? `Injured: ${r.injury}${r.injury_can_play ? ' (can play)' : ''}` : r.reason}
@@ -225,6 +256,14 @@ export default function FixtureDetail() {
               ) : null}
             </View>
           </Card>
+          {!isPast && yes.filter((r) => !r.injury || r.injury_can_play).length < 4 ? (
+            <Button
+              title="Short of players? Borrow from a lower team"
+              icon="arrow-up-circle-outline"
+              variant="secondary"
+              onPress={() => router.push({ pathname: '/borrow/[fixtureId]', params: { fixtureId: String(fixtureId) } })}
+            />
+          ) : null}
           {!isPast && none.length > 0 ? (
             <Button title={`Remind ${none.length} player${none.length === 1 ? '' : 's'}`} icon="notifications-outline" variant="secondary" loading={chase.isPending} onPress={() => chase.mutate()} />
           ) : null}

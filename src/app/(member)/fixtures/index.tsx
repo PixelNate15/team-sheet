@@ -84,6 +84,7 @@ function FixtureRow({ f }: { f: MyFixture }) {
       accent={f.is_selected ? 'success' : undefined}
       chips={
         <>
+          {f.is_borrowed ? <Chip label={`Playing up · ${f.squad_name}`} tone="accent" icon="arrow-up-circle" /> : null}
           {f.is_selected ? <Chip label={`Selected · Pair ${f.pair_number}`} tone="success" icon="checkmark-circle" /> : null}
           {f.is_available === true && !f.is_selected ? <Chip label="Available" tone="accent" icon="thumbs-up" /> : null}
           {f.is_available === false ? <Chip label="Unavailable" tone="danger" icon="thumbs-down" /> : null}

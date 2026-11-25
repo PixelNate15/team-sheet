@@ -149,6 +149,7 @@ function RootNavigator() {
           <Stack.Screen name="add-players" options={{ ...modal, title: 'Add players' }} />
           <Stack.Screen name="fixture-edit" options={{ ...modal, title: 'Fixture' }} />
           <Stack.Screen name="result-entry/[fixtureId]" options={{ ...modal, title: 'Enter result' }} />
+          <Stack.Screen name="borrow/[fixtureId]" options={{ ...modal, title: 'Borrow a player' }} />
         </Stack.Protected>
       </Stack.Protected>
 
