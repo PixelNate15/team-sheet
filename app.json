@@ -65,7 +65,8 @@
           "calendarPermission": "Team Sheet adds your fixtures to your calendar when you ask it to.",
           "remindersPermission": false
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
