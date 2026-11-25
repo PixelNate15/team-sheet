@@ -6,10 +6,10 @@ import { supabase } from './supabase';
  * Where Supabase's email links (sign-up confirmation, password reset) send
  * the user back to: the app's own auth-callback screen.
  *   Expo Go:     exp://<computer-ip>:8081/--/auth-callback  (LAN)
- *                exp://<id>.exp.direct/--/auth-callback      (`npm run start:tunnel`)
+ *                exps://<id>.on.expo.app/--/auth-callback    (`npm run start:tunnel`, HTTPS)
  *   Real build:  teamsheet://auth-callback
- * Both schemes must be in Supabase → Authentication → URL Configuration → Redirect URLs
- * (`exp://**`, `teamsheet://**`), otherwise Supabase falls back to the Site URL.
+ * All three schemes must be in Supabase → Authentication → URL Configuration → Redirect URLs
+ * (`exp://**`, `exps://**`, `teamsheet://**`), otherwise Supabase falls back to the Site URL.
  * Supabase never redirects to a raw IP address, even when `exp://**` is allowed, so
  * test email links in Expo Go with the tunnel (or in a development build).
  */
