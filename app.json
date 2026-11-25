@@ -13,7 +13,7 @@
         "dark": "./assets/images/icon-dark.png",
         "tinted": "./assets/images/icon-tinted.png"
       },
-      "bundleIdentifier": "uk.co.evolvit.teamsheet",
+      "bundleIdentifier": "com.pixelnate15.teamsheet",
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
@@ -31,7 +31,7 @@
         "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
       ],
-      "package": "uk.co.evolvit.teamsheet"
+      "package": "com.pixelnate15.teamsheet"
     },
     "web": {
       "output": "single",

@@ -4,7 +4,7 @@
 
 _Last updated: [date]_
 
-Team Sheet is provided by **Evolvit** ([registered address], [company number]) ("we", "us"). We are the data controller for account data. Each club decides who joins it and what happens in it, so it is also responsible for how its members' data is used within the club.
+Team Sheet is provided by **[provider name]** ([registered address], [company number]) ("we", "us"). We are the data controller for account data. Each club decides who joins it and what happens in it, so it is also responsible for how its members' data is used within the club.
 
 ## What we collect
 
@@ -36,7 +36,7 @@ You can:
 - **Remove injury information** at any time (Me → Fitness → I've recovered).
 - **Leave a club** (Me → Leave club).
 - **Delete your account** in the app (Me → Delete my account). This permanently deletes your profile, availability, injury history, match participation and feedback.
-- **Ask for a copy of your data or object to processing:** email [support@evolvit.co.uk]. You can also complain to the ICO (ico.org.uk).
+- **Ask for a copy of your data or object to processing:** email [support email]. You can also complain to the ICO (ico.org.uk).
 
 ## Retention
 
@@ -44,4 +44,4 @@ We keep account data while your account exists, and delete it when you delete yo
 
 ## Contact
 
-[support@evolvit.co.uk]
+[support email]
