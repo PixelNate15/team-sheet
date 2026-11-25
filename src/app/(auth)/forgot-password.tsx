@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/Bits';
 import { Button } from '@/components/Button';
+import { EmailLinkWarning } from '@/components/EmailLinkWarning';
 import { TextField } from '@/components/Field';
 import { Text } from '@/components/Text';
 import { authRedirectUrl } from '@/lib/auth-links';
@@ -39,7 +40,7 @@ export default function ForgotPassword() {
 
   return (
     <ScrollView
-        automaticallyAdjustKeyboardInsets
+      automaticallyAdjustKeyboardInsets
       style={{ backgroundColor: c.background }}
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + 56, gap: space.lg }}>
@@ -56,6 +57,7 @@ export default function ForgotPassword() {
               We’ll email you a link to choose a new one.
             </Text>
           </View>
+          <EmailLinkWarning />
           <TextField
             label="Email"
             value={email}

@@ -1,5 +1,6 @@
 import * as Linking from 'expo-linking';
 
+import { emailLinksReach } from './email-links';
 import { supabase } from './supabase';
 
 /**
@@ -15,6 +16,11 @@ import { supabase } from './supabase';
  */
 export function authRedirectUrl() {
   return Linking.createURL('auth-callback');
+}
+
+/** False when Supabase can't send email links back to this session (see email-links.ts). */
+export function emailLinksReachThisApp() {
+  return emailLinksReach(authRedirectUrl());
 }
 
 export type AuthLinkResult =

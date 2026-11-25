@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 import { EmptyState } from '@/components/Bits';
 import { Button } from '@/components/Button';
+import { EmailLinkWarning } from '@/components/EmailLinkWarning';
 import { TextField } from '@/components/Field';
 import { Text } from '@/components/Text';
 import { authRedirectUrl } from '@/lib/auth-links';
@@ -160,6 +161,7 @@ export default function SignUp() {
             {errors.form}
           </Text>
         ) : null}
+        <EmailLinkWarning />
         <Button title="Create account" onPress={submit} loading={busy} />
       </ScrollView>
     </KeyboardAvoidingView>
