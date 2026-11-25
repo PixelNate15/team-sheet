@@ -22,6 +22,9 @@ begin
      and not exists (select 1 from public.squads s where s.division_id = d.id)
      and not exists (select 1 from public.fixtures f where f.division_id = d.id);
 
+  -- Sample invites (batch 2 extras).
+  delete from public.club_invites where email like '%@teamsheet.test';
+
   -- Sample league table rows (rows saved in the app always record who saved them).
   delete from public.league_table_rows where updated_by is null;
 

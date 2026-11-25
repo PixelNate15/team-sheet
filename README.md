@@ -17,18 +17,27 @@
 - Let your captain know when you're injured, and when you're fit again.
 - Follow your results, form and record with each partner, including your best pairings.
 - Rate your partner after a match. The feedback helps captains choose pairings.
+- Sort out lifts to away matches: offer seats in your car, or ask for a lift.
+- Chat with the team about each fixture, and see your captain's pinned notices.
+- See any match fees you owe.
+- Add a profile photo so everyone knows who's who.
 - Add fixtures to your phone's calendar.
 
 ### As a captain
 - Manage your squad and fixtures.
 - See who's available at a glance, and chase anyone who hasn't replied.
 - Pick the team with help from form scores and a suggested line-up.
+- Short of players? Borrow someone from a lower team for one match. Each player can play up twice a season, and Team Sheet keeps count.
 - Enter rubber-by-rubber scores, and Team Sheet works out the result.
-- Keep your division's league table up to date.
+- Keep your division's league table up to date. Opponents' positions fill in automatically when you add a fixture.
+- Set a match fee and tick off who's paid.
+- Post notices that go straight to the whole team.
+- Create a season report PDF with every result and each player's record.
 
 ### As a club admin
 - Create the club and share a 6-character code so members can join.
 - Set up teams, seasons and divisions, and manage members and their roles.
+- Import a list of players from a spreadsheet. When they sign up, they join the right team automatically.
 
 ## Notifications
 
@@ -38,6 +47,8 @@ Team Sheet keeps everyone in the loop automatically. You'll get a notification w
 - your captain asks for your availability
 - a fixture is 5 days and 2 days away and you haven't replied
 - a result is posted (with a nudge to rate your partner)
+- your captain posts a notice
+- someone gives you a lift, or you're asked to play up
 
 You can turn notifications off at any time in **Me**.
 
