@@ -3,7 +3,7 @@
 -- Everything runs in a transaction and is rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(29);
 
 -- ------------------------------------------------------------------ fixtures
 -- Users (the trigger creates their profiles)
@@ -39,8 +39,13 @@ insert into public.squad_players (user_id, squad_id) values
   ('00000000-0000-0000-0000-0000000000b4', 9001),
   ('00000000-0000-0000-0000-0000000000b5', 9002);
 
--- Same scenario as the Python reference run (Original_Code/System/form_score_calculation.py):
--- three resulted fixtures 60, 30 and 10 days ago, opponent positions 3, 5, 1 in an 8-team division.
+-- Three resulted fixtures 60, 30 and 10 days ago, opponent positions 3, 5, 1 in an 8-team division.
+-- (The same scenario as the original Python reference run, which gave 0.8577 and 0.5166 under the
+-- old formula.) Expected values under the centred formula, worked by hand:
+--   60 days: ratio 0.60 x opponent 1.0 (no history yet) x partner 1.16 (form 0.9) = 0.696, weight 0.5
+--   30 days: ratio 0.50 x 1.0 (only 1 before) x 1.0 (unknown)                     = 0.500, weight 0.7071
+--   10 days: ratio 0.80 x 1.2 (top of 8) x 1.2 (form 1.1, capped)                  = 1.152, weight 0.8909
+--   today = 1.7279 / 2.0980 = 0.8236; 20 days ago (first two only) = 0.5812
 insert into public.fixtures (id, club_id, squad_id, season_id, division_id, opponent_name, fixture_date, start_time, location, is_home, opponent_league_position)
 overriding system value values
   (9101, 9001, 9001, 9001, 9001, 'Opp A', current_date - 60, '14:00', 'Here', true, 3),
@@ -86,10 +91,12 @@ set local role authenticated;
 
 -- ------------------------------------------------------------- form score parity
 select tests.login('00000000-0000-0000-0000-0000000000a1');
-select is(public.form_score('00000000-0000-0000-0000-0000000000b1'), 0.8577::numeric,
-  'form_score today matches the original Python (0.8577)');
-select is(public.form_score('00000000-0000-0000-0000-0000000000b1', current_date - 20), 0.5166::numeric,
-  'form_score 20 days ago matches the original Python (0.5166)');
+select is(public.form_score('00000000-0000-0000-0000-0000000000b1'), 0.8236::numeric,
+  'form_score today matches the hand-worked centred formula (0.8236)');
+select is(public.form_score('00000000-0000-0000-0000-0000000000b1', current_date - 20), 0.5812::numeric,
+  'form_score 20 days ago matches the hand-worked centred formula (0.5812)');
+select throws_ok($$ select public.form_score_raw('00000000-0000-0000-0000-0000000000b1') $$, '42501', null,
+  'the unchecked form_score_raw cannot be called from the app');
 select is(public.form_score('00000000-0000-0000-0000-0000000000b1', current_date - 60), null::numeric,
   'form_score is null with no earlier matches (original returned None)');
 select is((select count(*)::int from public.form_history('00000000-0000-0000-0000-0000000000b1')), 10,

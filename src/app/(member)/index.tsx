@@ -11,6 +11,7 @@ import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
 import { useSignedIn } from '@/lib/auth';
 import { fullDate, longDate, relativeDay, shortTime } from '@/lib/format';
+import { feedbackToGive } from '@/lib/feedback';
 import { useGroupedResults, useMyFixtures, useMyInjury, useRefreshAll, useSetAvailability } from '@/lib/hooks';
 import type { MyFixture } from '@/lib/types';
 import { radius, space, useTheme } from '@/theme';
@@ -25,7 +26,7 @@ export default function Home() {
 
   const next = fixtures.data?.[0];
   const needReply = fixtures.data?.filter((f) => f.is_available == null) ?? [];
-  const needFeedback = results.data?.filter((r) => !r.feedback_given) ?? [];
+  const needFeedback = feedbackToGive(results.data);
   const lastResult = results.groups[0];
 
   return (
@@ -100,7 +101,7 @@ export default function Home() {
                   icon="star-outline"
                   tone="accent"
                   title={`Rate ${needFeedback.length === 1 ? 'your partner' : `${needFeedback.length} partners`}`}
-                  subtitle="Quick, private feedback after each rubber"
+                  subtitle="Quick, private feedback after each fixture"
                 />
               </Pressable>
             ) : null}

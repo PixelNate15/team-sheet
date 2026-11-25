@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { NativeTabs } from 'expo-router/native-tabs';
 
 import { fetchMyFixtures, fetchMyResults } from '@/lib/api';
+import { feedbackToGive } from '@/lib/feedback';
 import { useTheme } from '@/theme';
 
 export default function MemberTabs() {
@@ -10,7 +11,7 @@ export default function MemberTabs() {
   const results = useQuery({ queryKey: ['myResults'], queryFn: fetchMyResults });
 
   const needReply = fixtures.data?.filter((f) => f.is_available == null).length ?? 0;
-  const needFeedback = results.data?.filter((r) => !r.feedback_given).length ?? 0;
+  const needFeedback = feedbackToGive(results.data).length;
 
   return (
     <NativeTabs tintColor={c.accent} backgroundColor={c.surface} indicatorColor={c.accentSoft} badgeBackgroundColor={c.danger}>

@@ -5,7 +5,7 @@
 --   * your squad filled to 8, plus a "2nd Team" squad in a new "Division 2"
 --   * 6 played fixtures with full results, entered through save_fixture_result
 --     as the admin, so form scores and records are calculated exactly as in the app
---   * partner feedback (some still waiting for you to give)
+--   * partner feedback, one rating per partner per fixture (two still waiting for you)
 --   * 4 upcoming fixtures: one with the team picked (you're in it), one waiting
 --     for your reply, two further out
 --   * a current injury, availability replies, and Division 1's league table
@@ -150,11 +150,13 @@ begin
           from jsonb_array_elements(r.rubbers) with ordinality as t(x, k)));
   end loop;
 
-  -- Partner feedback: everyone rates their partner, except you on the last
-  -- two fixtures you played (so the Feedback tab has something to do).
+  -- Partner feedback: everyone rates their partner once per fixture (on the
+  -- earliest rubber they played together), except you on the last two fixtures
+  -- you played (so the Feedback tab has something to do).
   insert into public.partner_feedback (match_id, reviewer_id, reviewed_id, overall_rating,
                                        key_moments_rating, communication_rating, comments, created_at)
-  select mp.match_id, mp.user_id, mp.partner_user_id,
+  select distinct on (m.fixture_id, mp.user_id, mp.partner_user_id)
+         mp.match_id, mp.user_id, mp.partner_user_id,
          5 + (abs(hashtext(mp.match_id::text || mp.user_id::text)) % 5),
          4 + (abs(hashtext(mp.user_id::text || mp.match_id::text)) % 6),
          5 + (abs(hashtext(mp.partner_user_id::text || mp.match_id::text)) % 5),
@@ -164,7 +166,8 @@ begin
     from public.match_players mp
     join public.matches m on m.id = mp.match_id
    where m.fixture_id = any (v_fixtures)
-     and not (mp.user_id = v_admin and m.fixture_id = any (v_fixtures[4:5]));
+     and not (mp.user_id = v_admin and m.fixture_id = any (v_fixtures[4:5]))
+   order by m.fixture_id, mp.user_id, mp.partner_user_id, m.rubber_number;
 
   -- ---------------------------------------------------------------
   -- Upcoming fixtures

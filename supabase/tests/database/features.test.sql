@@ -3,7 +3,7 @@
 -- Everything runs in a transaction and is rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(20);
+select plan(23);
 
 -- ------------------------------------------------------------------ test data
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -162,6 +162,20 @@ select is_empty($$ select * from public.league_table_rows where division_id = 95
 select throws_ok(
   $$ select public.save_league_table(9501, '[{"team_name":"X"}]'::jsonb) $$,
   'P0001', null, 'other club cannot edit the league table');
+
+-- ------------------------------------------------------------- feedback once per fixture
+-- Pat and Pip played rubbers 1 and 2 of fixture 9601 together: one rating covers both.
+select tests.login('00000000-0000-0000-0000-0000000005b2');
+select lives_ok(
+  $$ insert into public.partner_feedback (match_id, reviewer_id, reviewed_id, overall_rating, key_moments_rating, communication_rating)
+     values (9701, '00000000-0000-0000-0000-0000000005b2', '00000000-0000-0000-0000-0000000005b1', 7, 7, 7) $$,
+  'a player can rate their partner for a fixture');
+select throws_ok(
+  $$ insert into public.partner_feedback (match_id, reviewer_id, reviewed_id, overall_rating, key_moments_rating, communication_rating)
+     values (9702, '00000000-0000-0000-0000-0000000005b2', '00000000-0000-0000-0000-0000000005b1', 7, 7, 7) $$,
+  '23505', null, 'the same partner cannot be rated twice for one fixture');
+select is((select count(*)::int from public.my_results() where fixture_id = 9601 and not feedback_given), 0,
+  'one rating marks both rubbers with that partner as done');
 
 select * from finish();
 rollback;

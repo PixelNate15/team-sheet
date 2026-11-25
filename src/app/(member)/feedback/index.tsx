@@ -12,6 +12,7 @@ import { Text } from '@/components/Text';
 import { fetchFeedbackReceived } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { fullDate } from '@/lib/format';
+import { feedbackToGive } from '@/lib/feedback';
 import { useMyResults, useRefreshAll } from '@/lib/hooks';
 import { space } from '@/theme';
 
@@ -25,7 +26,7 @@ export default function FeedbackTab() {
   const [tab, setTab] = useState<'give' | 'received'>('give');
 
   const results = useMyResults();
-  const toGive = results.data?.filter((r) => !r.feedback_given) ?? [];
+  const toGive = feedbackToGive(results.data);
   const received = useQuery({ queryKey: ['feedbackReceived', userId], queryFn: () => fetchFeedbackReceived(userId) });
 
   const avg = (k: 'overall_rating' | 'key_moments_rating' | 'communication_rating') => {
@@ -63,7 +64,7 @@ export default function FeedbackTab() {
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyBold">Rate {r.partner_name}</Text>
                     <Text variant="small" color="textMuted">
-                      {r.is_home ? 'vs' : '@'} {r.opponent_name} · {fullDate(r.fixture_date)} · {r.did_win ? 'Won' : 'Lost'}
+                      {r.is_home ? 'vs' : '@'} {r.opponent_name} · {fullDate(r.fixture_date)}
                     </Text>
                   </View>
                   <Text variant="smallBold" color="accent">
