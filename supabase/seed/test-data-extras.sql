@@ -1,7 +1,7 @@
 -- Sample data for feature batch 2, added on top of test-data.sql (run by
 -- `npm run db:seed` after it; removed by `npm run db:unseed`). Safe to run once
 -- on an existing sample: it stops if the extras are already there.
---   * £5 match fees on the sample 1st-team fixtures, mostly paid (you owe on two)
+--   * £5 match fees on the sample 1st-team fixtures, all paid except yours for Riverside
 --   * a captain's notice and a short chat on the next away fixture
 --   * lifts for that fixture: Oliver driving Tom, James still needs a lift
 --   * two pending invites (Import players)
@@ -41,7 +41,7 @@ begin
   select id into v_later from public.fixtures
    where notes like v_tag || '%' and squad_id = v_sq1 and opponent_name = 'Hillside Park A' and fixture_date >= current_date;
 
-  -- Match fees: £5 on every sample 1st-team fixture; everyone has paid except you on the last two played.
+  -- Match fees: £5 on every sample 1st-team fixture; everyone has paid except you for the most recent fixture you played.
   update public.fixtures set match_fee_pence = 500 where notes like v_tag || '%' and squad_id = v_sq1;
   insert into public.fixture_fee_payments (fixture_id, user_id, marked_by, paid_at)
   select t.fixture_id, t.user_id, v_admin, f.fixture_date + 1
