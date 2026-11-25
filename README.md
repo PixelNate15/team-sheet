@@ -1,100 +1,82 @@
 # Team Sheet
 
-A cross-platform (iOS, Android) app for running tennis doubles league teams, built with **Expo / React Native** and **Supabase** (Postgres, Auth, Row Level Security).
+**Run your tennis doubles league team from your phone.** Team Sheet brings availability, team selection, results and partner feedback into one app for iOS and Android, so nobody has to chase replies in group chats or keep a spreadsheet up to date.
 
-## Features
+## Who it's for
 
-- **Members** set their availability, report injuries, see team selection, fixtures and results, track their partnerships and rate their partners.
-- **Captains** manage their squad, fixtures, team selection (with form scores and a recommended team), results and the division's league table.
-- **Club admins** manage teams, seasons, divisions and members.
-- **Multi-club:** one install serves any number of clubs. Players join a club with a 6-character code.
-- **Push notifications** for fixture changes, selection, availability chasers, automatic reminders and new results.
-- **Light and dark mode**, following the device setting or chosen in the app.
+- **Players:** know when you're playing, who you're partnering and how your season is going.
+- **Captains:** pick the team from who's actually available, then record results in a couple of taps.
+- **Club admins:** set up teams, seasons and divisions, and manage who's in the club.
 
-## Tech stack
+## What you can do
 
-| Area | Choice |
-| --- | --- |
-| App | Expo, React Native, Expo Router, TypeScript |
-| Data fetching | TanStack Query |
-| Backend | Supabase: Postgres, Auth, Row Level Security, RPC functions |
-| Scheduled jobs | `pg_cron`; notifications sent from the database via `pg_net` to the Expo push service |
-| Tests | Jest (app logic), pgTAP-style SQL tests (database rules and security) |
+### As a player
+- See your upcoming fixtures, with the date, time, venue and whether it's home or away.
+- Say whether you can play with one tap, and get reminders if you haven't replied.
+- Find out as soon as you're selected, and who your partner is.
+- Let your captain know when you're injured, and when you're fit again.
+- Follow your results, form and record with each partner, including your best pairings.
+- Rate your partner after a match. The feedback helps captains choose pairings.
+- Add fixtures to your phone's calendar.
 
-## Project layout
+### As a captain
+- Manage your squad and fixtures.
+- See who's available at a glance, and chase anyone who hasn't replied.
+- Pick the team with help from form scores and a suggested line-up.
+- Enter rubber-by-rubber scores, and Team Sheet works out the result.
+- Keep your division's league table up to date.
 
-```
-src/app/            Expo Router screens
-  (auth)/           sign in, sign up, forgot password
-  onboarding/       join a club with a code, or create one
-  (member)/         tabs: Home, Fixtures, Results, Feedback, Me
-  (captain)/        tabs: Squad, Fixtures, Results, Club (+ admin pages)
-  league/           a division's league table
-  auth-callback     where email links (confirm, reset) land
-  ...               fixture, result, availability, feedback, player and editing screens
-src/components/     UI kit (cards, buttons, pickers, charts, team sheet, stats lists)
-src/lib/            Supabase client, data access, auth, notifications, calendar, scoring rules
-src/theme/          design tokens (colours, type, spacing) for light and dark
-supabase/migrations Postgres schema, RLS policies, RPC functions and scheduled jobs
-supabase/tests/     database tests
-scripts/            database push and test runners
-docs/               supporting documents
-```
+### As a club admin
+- Create the club and share a 6-character code so members can join.
+- Set up teams, seasons and divisions, and manage members and their roles.
+
+## Notifications
+
+Team Sheet keeps everyone in the loop automatically. You'll get a notification when:
+- a fixture is added, changed or cancelled
+- you're selected
+- your captain asks for your availability
+- a fixture is 5 days and 2 days away and you haven't replied
+- a result is posted (with a nudge to rate your partner)
+
+You can turn notifications off at any time in **Me**.
 
 ## Getting started
 
-1. **Install:** `npm install` (Node 20+).
-2. **Supabase:** create a project at [supabase.com](https://supabase.com).
-3. **Environment:** copy `.env.example` to `.env`. Fill in the project URL and publishable key. To push migrations or run the database tests, also add the database password. Read [Security](#security) first.
-4. **Database:** apply the migrations, then run the database tests. The tests roll back everything they create.
-   ```bash
-   npm run db:push -- --dry-run   # see what would be applied
-   npm run db:push
-   npm run test:db
-   ```
-   If your project's session pooler host differs from the default in `scripts/db-url.mjs`, set `SUPABASE_DB_HOST` in `.env`.
-5. **Auth settings** (Supabase dashboard → Authentication):
-   - Keep **Confirm email** on.
-   - Add `exp://**` (Expo Go) and `teamsheet://**` (builds) to the **Redirect URLs**, so email links open the app.
-   - Set the **Site URL** to a simple "Email confirmed – return to the app" page.
-6. **Run:** `npx expo start`, then open the app in Expo Go or a development build. Calendar export and push notifications need a development build (`npx eas-cli@latest build --profile development`).
+1. Install Team Sheet and create an account with your email address.
+2. Confirm your email using the link Team Sheet sends you.
+3. Join your club with the code from your captain or club admin, or create a new club.
 
-## Checks
+One app works for any number of clubs, and each club only sees its own members, fixtures and results.
 
-```bash
-npm run typecheck   # TypeScript
-npx expo lint       # lint
-npm test            # unit tests
-npm run test:db     # database tests (needs the database password in .env)
-npx expo-doctor     # dependency / config check
-```
+## Your data
 
-## Security
+- Your club can see your name, fixtures, selection, results and injury status. Other clubs see none of it.
+- Partner feedback is seen only by you, the partner it's about, and your captains and admins.
+- You can clear an injury at any time once you're fit again.
+- You can leave a club or permanently delete your account from **Me** in the app.
 
-This repository is public and contains **no secrets**.
+## Look and feel
 
-| Value | Where it goes | Ships in the app? |
-| --- | --- | --- |
-| Project URL and **publishable** key | `.env` as `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes. It's designed to be public; Row Level Security decides what each user can see. |
-| **Database password** (migrations and tests only) | `.env` as `SUPABASE_DB_PASSWORD` | **No.** Never give it the `EXPO_PUBLIC_` prefix. |
-| **Service-role / secret key** | Not used by this project | **Never.** It bypasses Row Level Security. |
+Team Sheet has light and dark modes. It follows your phone's setting, or you can choose one in **Me → Appearance**. Colour is never the only signal: statuses and results always come with text too.
 
-- Anything prefixed `EXPO_PUBLIC_` is compiled into the app and can be extracted.
-- `.env` and every `.env.*` file except `.env.example` are git-ignored.
-- The database scripts read the password from `.env` and mask it in output; in CI, provide `SUPABASE_DB_URL` as a secret instead.
-- Every table has Row Level Security. Functions are callable only by signed-in users; internal ones (push sending, reminders) by nobody. The database tests check this as different users.
+---
 
-## Building and releasing
+<details>
+<summary>For developers</summary>
 
-Builds use [EAS](https://docs.expo.dev/eas/). Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` as EAS environment variables (the database password is not needed for builds), then:
+Team Sheet is built with Expo / React Native and Supabase (Postgres, Auth, Row Level Security).
 
 ```bash
-npx eas-cli@latest build --profile production --platform all
-npx eas-cli@latest submit --platform ios
-npx eas-cli@latest submit --platform android
+npm install
+cp .env.example .env    # add your Supabase project URL and publishable key
+npm run db:push         # apply the database migrations
+npx expo start
 ```
 
-Before release, set your own bundle identifier in `app.json` and your privacy policy URL and support email in `src/lib/config.ts`.
+Checks: `npm run typecheck`, `npx expo lint`, `npm test` and `npm run test:db`. Calendar export and push notifications need a development build. Only the publishable key goes in the app; secret keys and database passwords never do.
+
+</details>
 
 ## License
 
