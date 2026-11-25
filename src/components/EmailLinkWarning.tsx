@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-import { emailLinksReachThisApp } from '@/lib/auth-links';
+import { authRedirectUrl, emailLinksReachThisApp } from '@/lib/auth-links';
 import { radius, space, useTheme } from '@/theme';
 
 import { Text } from './Text';
@@ -22,6 +22,9 @@ export function EmailLinkWarning() {
       <Text variant="small" color="text">
         This copy of the app was opened from a local network address, so links in emails go to localhost. Restart with
         “npm run start:tunnel” and scan the new QR code, then send the email again.
+      </Text>
+      <Text variant="caption" color="textMuted" selectable>
+        {authRedirectUrl()}
       </Text>
     </View>
   );

@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import * as Linking from 'expo-linking';
 
 import { emailLinksReach } from './email-links';
@@ -15,7 +16,14 @@ import { supabase } from './supabase';
  * test email links in Expo Go with the tunnel (or in a development build).
  */
 export function authRedirectUrl() {
-  return Linking.createURL('auth-callback');
+  const url = Linking.createURL('auth-callback');
+  if (emailLinksReach(url)) return url;
+  // Expo Go reached the dev server over the local network (an IP address, which
+  // Supabase won't redirect to). In tunnel mode the app config still names the
+  // tunnel, which serves the same server, so send email links there instead.
+  const tunnelHost = Constants.expoConfig?.hostUri?.replace(/\/.*$/, '');
+  if (tunnelHost && emailLinksReach(`exps://${tunnelHost}`)) return `exps://${tunnelHost}/--/auth-callback`;
+  return url;
 }
 
 /** False when Supabase can't send email links back to this session (see email-links.ts). */
