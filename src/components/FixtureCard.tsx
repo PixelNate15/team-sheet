@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { dayMonth, shortTime } from '@/lib/format';
-import { radius, space, type Palette, useTheme } from '@/theme';
+import { font, radius, space, type Palette, useTheme } from '@/theme';
 
 import { Card } from './Card';
 import { Text } from './Text';
@@ -19,7 +19,7 @@ export function DateBlock({ iso, tone = 'accent' }: { iso: string; tone?: 'accen
       <Text variant="caption" style={{ color: fg }}>
         {month}
       </Text>
-      <Text style={{ color: fg, fontSize: 22, lineHeight: 26, fontWeight: '800' }}>{day}</Text>
+      <Text style={{ color: fg, fontFamily: font.display, fontSize: 24, lineHeight: 28 }}>{day}</Text>
     </View>
   );
 }

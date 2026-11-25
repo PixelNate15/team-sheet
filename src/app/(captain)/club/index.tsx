@@ -15,7 +15,7 @@ import { useSignedIn } from '@/lib/auth';
 import { APP_NAME } from '@/lib/config';
 import { errorMessage } from '@/lib/errors';
 import { confirm } from '@/lib/hooks';
-import { space, useTheme } from '@/theme';
+import { font, space, useTheme } from '@/theme';
 
 export default function Club() {
   const { c } = useTheme();
@@ -46,13 +46,13 @@ export default function Club() {
   return (
     <Screen>
       <Hero>
-        <Text variant="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
+        <Text variant="caption" style={{ color: c.onHeroMuted }}>
           {club.name.toUpperCase()} · CLUB CODE
         </Text>
         <Pressable onPress={copy} accessibilityRole="button" accessibilityLabel={`Club code ${club.join_code}. Tap to copy.`}>
-          <Text style={styles.code}>{club.join_code}</Text>
+          <Text style={[styles.code, { color: c.onHero }]}>{club.join_code}</Text>
         </Pressable>
-        <Text variant="small" style={{ color: 'rgba(255,255,255,0.85)' }}>
+        <Text variant="small" style={{ color: c.onHeroMuted }}>
           Players enter this code after creating an account. Tap the code to copy it.
         </Text>
         <View style={{ flexDirection: 'row', gap: space.sm, marginTop: space.lg }}>
@@ -110,7 +110,7 @@ export default function Club() {
 }
 
 const styles = StyleSheet.create({
-  code: { color: '#fff', fontSize: 44, lineHeight: 52, fontWeight: '900', letterSpacing: 8, marginVertical: space.sm },
+  code: { fontFamily: font.display, fontSize: 46, lineHeight: 54, letterSpacing: 6, marginVertical: space.sm },
   row: { padding: space.lg },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 64 },
 });

@@ -16,7 +16,7 @@ import { longDate } from '@/lib/format';
 import { useRefreshAll } from '@/lib/hooks';
 import type { FixtureRow } from '@/lib/types';
 import { evaluateRubber, RUBBERS, teamTotals, type RubberScore } from '@/lib/scoring';
-import { radius, space, useTheme } from '@/theme';
+import { font, radius, space, useTheme } from '@/theme';
 
 const blank = (): RubberScore => ({ set1Won: null, set1Lost: null, set2Won: null, set2Lost: null, champTie: null });
 
@@ -266,6 +266,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     textAlign: 'center',
     fontSize: 24,
-    fontWeight: '800',
+    fontFamily: font.display,
   },
 });

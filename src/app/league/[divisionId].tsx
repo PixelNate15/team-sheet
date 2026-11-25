@@ -15,7 +15,7 @@ import { errorMessage } from '@/lib/errors';
 import { fullDate } from '@/lib/format';
 import { confirm, useRefreshAll } from '@/lib/hooks';
 import type { LeagueRowInput } from '@/lib/types';
-import { radius, space, useTheme } from '@/theme';
+import { font, radius, space, useTheme } from '@/theme';
 
 /** A row being edited; numbers are kept as text until saving. */
 interface DraftRow {
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   tableHead: { paddingVertical: space.sm },
   divider: { height: StyleSheet.hairlineWidth },
   editRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  input: { minHeight: 44, borderRadius: radius.sm, paddingHorizontal: space.md, fontSize: 16 },
+  input: { minHeight: 44, borderRadius: radius.sm, paddingHorizontal: space.md, fontSize: 16, fontFamily: font.body },
   numberInput: { width: 64, textAlign: 'center' },
   iconButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
 });

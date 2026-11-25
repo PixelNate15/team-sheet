@@ -136,6 +136,7 @@ export default function Home() {
 }
 
 function NextFixture({ fixture: f }: { fixture: MyFixture }) {
+  const { c } = useTheme();
   const setAvail = useSetAvailability();
   const goToDetail = () => router.push({ pathname: '/fixture/[id]', params: { id: String(f.id) } });
 
@@ -143,16 +144,16 @@ function NextFixture({ fixture: f }: { fixture: MyFixture }) {
     <Pressable onPress={goToDetail} accessibilityRole="button" accessibilityLabel={`Next fixture against ${f.opponent_name}`}>
       <Hero>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text variant="caption" style={styles.heroCaption}>
+          <Text variant="caption" style={{ color: c.onHeroMuted }}>
             NEXT FIXTURE · {relativeDay(f.fixture_date).toUpperCase()}
           </Text>
-          <View style={styles.heroPill}>
-            <Text variant="caption" style={{ color: '#fff' }}>
+          <View style={[styles.heroPill, { backgroundColor: c.heroChip }]}>
+            <Text variant="caption" style={{ color: c.onHero }}>
               {f.is_home ? 'HOME' : 'AWAY'}
             </Text>
           </View>
         </View>
-        <Text variant="hero" style={{ color: '#fff', marginTop: space.sm }} numberOfLines={2}>
+        <Text variant="hero" style={{ color: c.onHero, marginTop: space.sm }} numberOfLines={2}>
           {f.opponent_name}
         </Text>
         <View style={{ gap: 4, marginTop: space.sm }}>
@@ -160,22 +161,22 @@ function NextFixture({ fixture: f }: { fixture: MyFixture }) {
           <HeroMeta icon="location-outline" text={f.location} />
         </View>
 
-        <View style={[styles.heroStatus, { backgroundColor: 'rgba(255,255,255,0.14)' }]}>
+        <View style={[styles.heroStatus, { backgroundColor: c.surface }]}>
           {f.is_selected ? (
             <>
               <IconBubble icon="checkmark-circle" tone="success" size={34} />
               <View style={{ flex: 1 }}>
-                <Text variant="bodyBold" style={{ color: '#fff' }}>
+                <Text variant="bodyBold" style={{ color: c.onHero }}>
                   You’re selected – Pair {f.pair_number}
                 </Text>
-                <Text variant="small" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                <Text variant="small" style={{ color: c.onHeroMuted }}>
                   {f.partner_name ? `Partnering ${f.partner_name}` : 'Partner to be confirmed'}
                 </Text>
               </View>
             </>
           ) : f.is_available == null ? (
             <View style={{ flex: 1, gap: space.sm }}>
-              <Text variant="bodyBold" style={{ color: '#fff' }}>
+              <Text variant="bodyBold" style={{ color: c.onHero }}>
                 Can you play?
               </Text>
               <View style={{ flexDirection: 'row', gap: space.sm }}>
@@ -202,10 +203,10 @@ function NextFixture({ fixture: f }: { fixture: MyFixture }) {
             <>
               <IconBubble icon={f.is_available ? 'thumbs-up' : 'thumbs-down'} tone={f.is_available ? 'success' : 'danger'} size={34} />
               <View style={{ flex: 1 }}>
-                <Text variant="bodyBold" style={{ color: '#fff' }}>
+                <Text variant="bodyBold" style={{ color: c.onHero }}>
                   {f.is_available ? 'You said you’re available' : 'You said you can’t play'}
                 </Text>
-                <Text variant="small" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                <Text variant="small" style={{ color: c.onHeroMuted }}>
                   {f.team_selected ? 'Team has been picked' : 'Waiting for the captain to pick the team'}
                 </Text>
               </View>
@@ -218,10 +219,11 @@ function NextFixture({ fixture: f }: { fixture: MyFixture }) {
 }
 
 function HeroMeta({ icon, text }: { icon: 'calendar-outline' | 'location-outline'; text: string }) {
+  const { c } = useTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-      <Ionicons name={icon} size={15} color="rgba(255,255,255,0.85)" />
-      <Text variant="small" style={{ color: 'rgba(255,255,255,0.9)' }} numberOfLines={1}>
+      <Ionicons name={icon} size={15} color={c.onHeroMuted} />
+      <Text variant="small" style={{ color: c.onHero }} numberOfLines={1}>
         {text}
       </Text>
     </View>
@@ -238,8 +240,7 @@ function dateTone(won: number, lost: number): 'success' | 'danger' | 'neutral' {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   switch: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.pill },
-  heroCaption: { color: 'rgba(255,255,255,0.8)' },
-  heroPill: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
+  heroPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.pill },
   heroStatus: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.lg, padding: space.md, borderRadius: radius.md },
   todo: { padding: space.lg },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 64 },

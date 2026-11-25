@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 
-import { useTheme } from '@/theme';
+import { font, useTheme } from '@/theme';
 
 import { Text } from './Text';
 
@@ -120,7 +120,7 @@ export function LineChart({
               y={Math.max((last.y ?? 0) - 8, 10)}
               fill={c.text}
               fontSize={12}
-              fontWeight="700"
+              fontFamily={font.bold}
               textAnchor="end">
               {lastValue.toFixed(decimals)}
             </SvgText>
@@ -133,6 +133,7 @@ export function LineChart({
                 y={height - 4}
                 fill={c.textFaint}
                 fontSize={10}
+                fontFamily={font.body}
                 textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}>
                 {p.label}
               </SvgText>

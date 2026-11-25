@@ -48,18 +48,18 @@ export default function ResultDetail() {
       <Stack.Screen options={{ title: f.opponent_name }} />
 
       <Hero>
-        <Text variant="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
+        <Text variant="caption" style={{ color: c.onHeroMuted }}>
           {longDate(f.fixture_date).toUpperCase()} · {f.is_home ? 'HOME' : 'AWAY'}
         </Text>
-        <Text variant="title" style={{ color: '#fff', marginTop: 4 }}>
+        <Text variant="title" style={{ color: c.onHero, marginTop: 4 }}>
           {f.opponent_name}
         </Text>
         {rubbers.length ? (
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: space.md, marginTop: space.lg }}>
-            <Text style={{ color: '#fff', fontSize: 56, lineHeight: 60, fontWeight: '900' }}>
+            <Text variant="stat" style={{ color: c.onHero, fontSize: 60, lineHeight: 64 }}>
               {setsWon}–{setsLost}
             </Text>
-            <Text variant="bodyBold" style={{ color: 'rgba(255,255,255,0.9)', marginBottom: 10 }}>
+            <Text variant="bodyBold" style={{ color: c.onHeroMuted, marginBottom: 10 }}>
               {setsWon > setsLost ? 'Win' : setsWon < setsLost ? 'Loss' : 'Draw'} · sets
             </Text>
           </View>

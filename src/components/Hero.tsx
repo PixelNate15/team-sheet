@@ -1,65 +1,59 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { LinearGradient } from 'expo-linear-gradient';
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
+import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 
 import { radius, space, useTheme } from '@/theme';
 
-/** Blue gradient panel used for the brand header and the "next fixture" card. */
+/** Warm feature panel used for the brand header and the "next fixture" card. */
 export function Hero({ children, style }: PropsWithChildren<{ style?: ViewStyle }>) {
   const { c } = useTheme();
   return (
-    <LinearGradient
-      colors={[c.heroStart, c.heroEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.hero, style]}>
-      {/* decorative court lines */}
-      <View pointerEvents="none" style={styles.courtA} />
-      <View pointerEvents="none" style={styles.courtB} />
+    <View style={[styles.hero, { backgroundColor: c.heroBg }, style]}>
+      {/* decorative open loop, echoing the studio mark */}
+      <View pointerEvents="none" style={[styles.loop, { borderColor: c.heroLine }]} />
       {children}
-    </LinearGradient>
+    </View>
   );
 }
 
-/** App mark: tennis ball in a rounded square. */
+/** Team Sheet app icon: tennis-ball glyph on the Terracotta tile (matches assets/brand). */
 export function Logo({ size = 64 }: { size?: number }) {
-  const { c } = useTheme();
+  const { isDark } = useTheme();
+  const tile = isDark ? '#412D27' : '#F6DBC9';
+  const glyph = isDark ? '#E99578' : '#A93C28';
   return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.3,
-        backgroundColor: 'rgba(255,255,255,0.16)',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-      }}>
-      <Ionicons name="tennisball" size={size * 0.56} color={c.ball} />
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 64 64" accessibilityLabel="Team Sheet">
+      <Rect width={64} height={64} rx={20} fill={tile} />
+      <G fill="none" stroke={glyph} strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round">
+        <Circle cx={32} cy={32} r={16} />
+        <Path d="M20.7 20.7c5.4 6.4 5.4 16.2 0 22.6M43.3 20.7c-5.4 6.4-5.4 16.2 0 22.6" />
+      </G>
+    </Svg>
+  );
+}
+
+/** PixelNate159 Software studio mark (open-loop P and spark). */
+export function StudioMark({ size = 28, color }: { size?: number; color?: string }) {
+  const { c } = useTheme();
+  const ink = color ?? c.accent;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 60 60" accessibilityLabel="PixelNate159 Software">
+      <Path d="M14 48V28a16 16 0 1 1 16 16h-5" fill="none" stroke={ink} strokeWidth={7} strokeLinecap="round" />
+      <Circle cx={31} cy={27} r={5} fill={ink} />
+      <Path d="M46 7h9m-4.5-4.5v9" stroke={ink} strokeWidth={2.5} strokeLinecap="round" />
+    </Svg>
   );
 }
 
 const styles = StyleSheet.create({
   hero: { borderRadius: radius.xl, padding: space.xl, overflow: 'hidden' },
-  courtA: {
+  loop: {
     position: 'absolute',
-    right: -40,
-    top: -30,
+    right: -50,
+    top: -50,
     width: 180,
     height: 180,
     borderRadius: 90,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  courtB: {
-    position: 'absolute',
-    right: 60,
-    top: -10,
-    bottom: -10,
-    width: 2,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 14,
   },
 });

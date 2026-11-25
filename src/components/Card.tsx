@@ -27,19 +27,15 @@ export function Card({
   padded = true,
   accessibilityLabel,
 }: CardProps) {
-  const { c, isDark } = useTheme();
+  const { c } = useTheme();
 
+  // Brand cards are flat warm surfaces with a fine border, no drop shadow.
   const base: ViewStyle = {
     backgroundColor: tone === 'soft' ? c.surfaceAlt : c.surface,
     borderRadius: radius.lg,
     padding: padded ? space.lg : 0,
-    borderWidth: selected ? 2 : isDark ? StyleSheet.hairlineWidth : 0,
+    borderWidth: selected ? 2 : 1,
     borderColor: selected ? c.accent : c.border,
-    shadowColor: '#0F172A',
-    shadowOpacity: isDark || tone === 'soft' ? 0 : 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: isDark || tone === 'soft' ? 0 : 2,
     overflow: 'hidden',
   };
 

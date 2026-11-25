@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import type { ComponentProps } from 'react';
 import { Platform } from 'react-native';
 
-import { useTheme } from '@/theme';
+import { font, useTheme } from '@/theme';
 
 type StackOptions = NonNullable<ComponentProps<typeof Stack>['screenOptions']>;
 
@@ -15,8 +15,8 @@ export function useTabHeader(): StackOptions {
     headerLargeTitleShadowVisible: false,
     headerStyle: { backgroundColor: c.background },
     headerLargeStyle: { backgroundColor: c.background },
-    headerTitleStyle: { color: c.text },
-    headerLargeTitleStyle: { color: c.text },
+    headerTitleStyle: { color: c.text, fontFamily: font.bold },
+    headerLargeTitleStyle: { color: c.text, fontFamily: font.display },
     headerTintColor: c.accent,
     headerBackButtonDisplayMode: 'minimal',
     contentStyle: { backgroundColor: c.background },

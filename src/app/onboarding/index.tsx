@@ -10,7 +10,7 @@ import { Text } from '@/components/Text';
 import { joinClub } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
-import { radius, space, useTheme } from '@/theme';
+import { font, radius, space, useTheme } from '@/theme';
 
 export default function JoinClub() {
   const { c } = useTheme();
@@ -44,10 +44,10 @@ export default function JoinClub() {
         contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl, gap: space.xl }}>
         <Hero>
           <Logo size={52} />
-          <Text variant="title" style={{ color: '#fff', marginTop: space.lg }}>
+          <Text variant="title" style={{ color: c.onHero, marginTop: space.lg }}>
             Welcome{me ? `, ${me.profile.first_name}` : ''}!
           </Text>
-          <Text variant="body" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          <Text variant="body" style={{ color: c.onHeroMuted }}>
             Join your club to see fixtures, tell your captain when you’re free and track your form.
           </Text>
         </Hero>
@@ -98,7 +98,7 @@ export default function JoinClub() {
 const styles = StyleSheet.create({
   code: {
     fontSize: 30,
-    fontWeight: '800',
+    fontFamily: font.display,
     letterSpacing: 10,
     textAlign: 'center',
     paddingVertical: space.lg,

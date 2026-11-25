@@ -34,12 +34,13 @@ export function Button({
 }: ButtonProps) {
   const { c } = useTheme();
 
-  const palette: Record<Variant, { bg: string; fg: string; pressed: string }> = {
+  // Brand: filled primary for the main action; outlined (muted ink) secondary; text-only ghost.
+  const palette: Record<Variant, { bg: string; fg: string; pressed: string; border?: string }> = {
     primary: { bg: c.accent, fg: c.onAccent, pressed: c.accentPressed },
-    secondary: { bg: c.accentSoft, fg: c.accent, pressed: c.surfaceAlt },
+    secondary: { bg: 'transparent', fg: c.text, pressed: c.surfaceAlt, border: c.outline },
     ghost: { bg: 'transparent', fg: c.accent, pressed: c.surfaceAlt },
-    danger: { bg: c.dangerSoft, fg: c.danger, pressed: c.surfaceAlt },
-    success: { bg: c.success, fg: '#FFFFFF', pressed: c.success },
+    danger: { bg: c.dangerSoft, fg: c.danger, pressed: c.surfaceAlt, border: c.danger },
+    success: { bg: c.success, fg: c.onSuccess, pressed: c.success },
   };
   const p = palette[variant];
   const inactive = disabled || loading;
@@ -57,6 +58,8 @@ export function Button({
         styles.base,
         size === 'sm' ? styles.sm : styles.md,
         { backgroundColor: pressed ? p.pressed : p.bg, alignSelf: full ? 'stretch' : 'flex-start' },
+        p.border ? { borderWidth: 1.5, borderColor: p.border } : null,
+        pressed && variant === 'success' && { opacity: 0.85 },
         // Disabled buttons look disabled (the original redrew them in the same colour).
         disabled && { opacity: 0.4 },
         style,
@@ -106,7 +109,7 @@ export function IconButton({
 const styles = StyleSheet.create({
   base: { borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   md: { minHeight: 52, paddingHorizontal: space.xl },
-  sm: { minHeight: 38, paddingHorizontal: space.lg },
+  sm: { minHeight: 44, paddingHorizontal: space.lg },
   inner: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
-  icon: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  icon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
 });

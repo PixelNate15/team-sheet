@@ -3,7 +3,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { initials } from '@/lib/format';
-import { avatarColor, radius, space, type Palette, useTheme } from '@/theme';
+import { avatarColor, font, radius, space, type Palette, useTheme } from '@/theme';
 
 import { Button } from './Button';
 import { Text } from './Text';
@@ -39,7 +39,7 @@ export function Avatar({
         borderColor: ring ? c[ring] : undefined,
       }}>
       <Text
-        style={{ color: col.fg, fontSize, lineHeight: Math.round(fontSize * 1.2), fontWeight: '800' }}
+        style={{ color: col.fg, fontSize, lineHeight: Math.round(fontSize * 1.2), fontFamily: font.bold }}
         allowFontScaling={false}>
         {initials(first, surname)}
       </Text>

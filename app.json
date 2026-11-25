@@ -8,7 +8,11 @@
     "scheme": "teamsheet",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": {
+        "light": "./assets/images/icon.png",
+        "dark": "./assets/images/icon-dark.png",
+        "tinted": "./assets/images/icon-tinted.png"
+      },
       "bundleIdentifier": "uk.co.evolvit.teamsheet",
       "supportsTablet": true,
       "config": {
@@ -17,13 +21,16 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1D4ED8",
+        "backgroundColor": "#F6DBC9",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "blockedPermissions": ["android.permission.READ_CALENDAR", "android.permission.WRITE_CALENDAR"],
+      "blockedPermissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ],
       "package": "uk.co.evolvit.teamsheet"
     },
     "web": {
@@ -37,18 +44,19 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1D4ED8",
+          "backgroundColor": "#FAF1E3",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76,
+          "imageWidth": 96,
           "dark": {
-            "backgroundColor": "#0A0F1E"
+            "backgroundColor": "#211916",
+            "image": "./assets/images/splash-icon-dark.png"
           }
         }
       ],
       [
         "expo-notifications",
         {
-          "color": "#2F7FF0"
+          "color": "#A93C28"
         }
       ],
       [

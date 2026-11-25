@@ -42,10 +42,10 @@ export default function SignIn() {
         contentContainerStyle={[styles.content, { paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl }]}>
         <Hero style={styles.hero}>
           <Logo />
-          <Text variant="hero" style={{ color: '#fff', marginTop: space.lg }}>
+          <Text variant="hero" style={{ color: c.onHero, marginTop: space.lg }}>
             {APP_NAME}
           </Text>
-          <Text variant="body" style={{ color: 'rgba(255,255,255,0.85)' }}>
+          <Text variant="body" style={{ color: c.onHeroMuted }}>
             Availability, selection, results and partner feedback for your tennis teams.
           </Text>
         </Hero>

@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { forwardRef, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, Switch, TextInput, View, type TextInputProps } from 'react-native';
 
-import { radius, space, useTheme } from '@/theme';
+import { font, radius, space, useTheme } from '@/theme';
 
 import { Text } from './Text';
 
@@ -33,7 +33,7 @@ export const TextField = forwardRef<TextFieldRef, TextFieldProps>(function TextF
           {
             backgroundColor: c.surface,
             color: c.text,
-            borderColor: error ? c.danger : c.border,
+            borderColor: error ? c.danger : c.outline,
             minHeight: multiline ? 96 : 52,
             textAlignVertical: multiline ? 'top' : 'center',
             paddingTop: multiline ? space.md : undefined,
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: space.lg,
     fontSize: 16,
+    fontFamily: font.body,
   },
   switchRow: {
     flexDirection: 'row',

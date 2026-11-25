@@ -7,6 +7,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Avatar, Chip, ListRow, SectionHeader } from '@/components/Bits';
 import { Card } from '@/components/Card';
 import { Segmented, SwitchRow } from '@/components/Field';
+import { StudioMark } from '@/components/Hero';
 import { PartnerStatsList } from '@/components/PartnerStats';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
@@ -166,8 +167,14 @@ export default function Me() {
         </Pressable>
       </Card>
 
+      <View style={styles.studio} accessible accessibilityLabel="Team Sheet by PixelNate159 Software">
+        <StudioMark size={30} />
+        <Text variant="smallBold" color="textMuted">
+          Made by PixelNate159 Software
+        </Text>
+      </View>
       <Text variant="small" color="textFaint" align="center">
-        Version {Constants.expoConfig?.version ?? '1.0.0'} · {membership.role === 'admin' ? 'Club admin' : 'Member'}
+        Team Sheet · Version {Constants.expoConfig?.version ?? '1.0.0'} · {membership.role === 'admin' ? 'Club admin' : 'Member'}
       </Text>
     </Screen>
   );
@@ -177,4 +184,5 @@ const styles = StyleSheet.create({
   profile: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
   row: { padding: space.lg },
   divider: { height: StyleSheet.hairlineWidth, marginLeft: 64 },
+  studio: { alignItems: 'center', gap: space.xs, marginTop: space.lg },
 });

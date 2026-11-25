@@ -1,5 +1,13 @@
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
+import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -10,7 +18,7 @@ import { EmptyState } from '@/components/Bits';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { registerForPush, useNotificationRouting } from '@/lib/notifications';
-import { space, useTheme } from '@/theme';
+import { font, space, useTheme } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -26,6 +34,16 @@ if (Platform.OS !== 'web') {
 }
 
 export default function RootLayout() {
+  // Brand fonts (PixelNate159 Terracotta). If loading fails the app falls back to system fonts.
+  const [fontsLoaded, fontError] = useFonts({
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
+    DMSans_700Bold,
+    DMSerifDisplay_400Regular,
+  });
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -47,6 +65,12 @@ function ThemedApp() {
       card: c.background,
       text: c.text,
       border: c.border,
+    },
+    fonts: {
+      regular: { fontFamily: font.body, fontWeight: 'normal' as const },
+      medium: { fontFamily: font.medium, fontWeight: 'normal' as const },
+      bold: { fontFamily: font.bold, fontWeight: 'normal' as const },
+      heavy: { fontFamily: font.bold, fontWeight: 'normal' as const },
     },
   };
   return (
@@ -93,7 +117,7 @@ function RootNavigator() {
     headerShadowVisible: false,
     headerStyle: { backgroundColor: c.background },
     headerTintColor: c.accent,
-    headerTitleStyle: { color: c.text },
+    headerTitleStyle: { color: c.text, fontFamily: font.bold },
   };
   const modal = { ...header, presentation: 'modal' as const };
 
