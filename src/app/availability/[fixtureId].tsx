@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { type ComponentRef, useRef, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { Loading } from '@/components/Bits';
@@ -26,6 +26,7 @@ function AvailabilityForm({ fixtureId, fixture }: { fixtureId: number; fixture: 
   // Opened from "Can't make it" unless they'd already said yes.
   const [available, setAvailable] = useState<'yes' | 'no'>(fixture?.is_available ? 'yes' : 'no');
   const [reason, setReason] = useState(fixture?.reason ?? '');
+  const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
 
   async function save() {
     await setAvail.mutateAsync({ fixtureId, available: available === 'yes', reason });
@@ -33,7 +34,14 @@ function AvailabilityForm({ fixtureId, fixture }: { fixtureId: number; fixture: 
   }
 
   return (
-    <ScrollView style={{ backgroundColor: c.background }} contentContainerStyle={{ padding: space.xl, gap: space.lg }} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      ref={scroll}
+      style={{ backgroundColor: c.background }}
+      contentContainerStyle={{ padding: space.xl, gap: space.lg }}
+      // The sheet is short, so make room for the keyboard and let the reason box scroll above it.
+      automaticallyAdjustKeyboardInsets
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive">
       <View style={{ gap: 2 }}>
         <Text variant="caption" color="textMuted">
           AVAILABILITY
@@ -63,6 +71,8 @@ function AvailabilityForm({ fixtureId, fixture }: { fixtureId: number; fixture: 
           placeholder="e.g. Away on holiday"
           maxLength={500}
           multiline
+          // Wait for the keyboard to finish opening, then bring the box and Save button into view.
+          onFocus={() => setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 350)}
         />
       ) : null}
 

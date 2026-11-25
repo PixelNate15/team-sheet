@@ -35,6 +35,8 @@ export function Screen({ children, onRefresh, footer, padTop, contentStyle }: Sc
     <View style={[styles.root, { backgroundColor: c.background }]}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
+        // iOS: make room for the keyboard so the focused field can scroll into view.
+        automaticallyAdjustKeyboardInsets
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="interactive"
         contentContainerStyle={[

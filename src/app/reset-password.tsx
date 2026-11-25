@@ -48,6 +48,7 @@ export default function ResetPassword() {
 
   return (
     <ScrollView
+        automaticallyAdjustKeyboardInsets
       style={{ backgroundColor: c.background }}
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: space.lg, gap: space.lg }}>
