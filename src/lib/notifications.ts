@@ -8,14 +8,17 @@ import { Platform } from 'react-native';
 
 import { updateProfile } from './api';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
-});
+// Notifications only work in the iOS and Android apps, not on web.
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+    }),
+  });
+}
 
 /**
  * Ask for permission and store this device's Expo push token on the profile.
@@ -57,8 +60,11 @@ export async function registerForPush(userId: string): Promise<boolean> {
   }
 }
 
-/** Open the relevant screen when a notification is tapped. */
-export function useNotificationRouting(enabled: boolean) {
+/** Open the relevant screen when a notification is tapped (does nothing on web). */
+export const useNotificationRouting: (enabled: boolean) => void =
+  Platform.OS === 'web' ? () => {} : useNotificationRoutingNative;
+
+function useNotificationRoutingNative(enabled: boolean) {
   const last = Notifications.useLastNotificationResponse();
 
   useEffect(() => {

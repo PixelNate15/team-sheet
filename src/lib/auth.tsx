@@ -70,7 +70,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
   // Apply the saved theme preference (system / light / dark).
   useEffect(() => {
     const pref = me?.profile.theme ?? 'system';
-    Appearance.setColorScheme(pref === 'system' ? 'unspecified' : pref);
+    // Not available on web, where the browser's setting is always followed.
+    if (typeof Appearance.setColorScheme === 'function') {
+      Appearance.setColorScheme(pref === 'system' ? 'unspecified' : pref);
+    }
   }, [me?.profile.theme]);
 
   const isAdmin = me?.membership?.role === 'admin';
