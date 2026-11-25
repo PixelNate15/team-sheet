@@ -96,7 +96,7 @@ export function PairPicker({
                   ]}>
                   {p ? (
                     <>
-                      <Avatar first={p.first_name} surname={p.surname} size={28} />
+                      <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={28} />
                       <Text variant="smallBold" numberOfLines={1} style={{ flex: 1 }}>
                         {p.first_name} {p.surname.charAt(0)}.
                       </Text>
@@ -142,7 +142,7 @@ export function PairPicker({
                   opacity: pressed ? 0.7 : p.status === 'out' ? 0.6 : 1,
                 },
               ]}>
-              <Avatar first={p.first_name} surname={p.surname} size={36} />
+              <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={36} />
               <View style={{ flex: 1, gap: 2 }}>
                 <Text variant="bodyBold">{fullName(p)}</Text>
                 <View style={{ flexDirection: 'row', gap: space.xs, alignItems: 'center' }}>

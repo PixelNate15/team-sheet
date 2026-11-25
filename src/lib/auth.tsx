@@ -136,7 +136,7 @@ type SignedIn = AuthState & {
 const EMPTY_CLUB = { id: 0, name: '', join_code: '' };
 const EMPTY_MEMBERSHIP: NonNullable<Me['membership']> = { club_id: 0, role: 'member', club: EMPTY_CLUB };
 const EMPTY_ME: Me = {
-  profile: { id: '', first_name: '', surname: '', theme: 'system', expo_push_token: null, notifications_enabled: false },
+  profile: { id: '', first_name: '', surname: '', theme: 'system', expo_push_token: null, notifications_enabled: false, avatar_path: null },
   membership: EMPTY_MEMBERSHIP,
   squads: [],
   mySquadId: null,

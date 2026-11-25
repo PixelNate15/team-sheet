@@ -5,10 +5,12 @@ import { Alert, Linking, Platform, View } from 'react-native';
 import { Avatar, Chip, EmptyState, ErrorState, InfoRow, Loading, SectionHeader } from '@/components/Bits';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { FeesSection } from '@/components/Fees';
+import { LiftsSection } from '@/components/Lifts';
 import { Screen } from '@/components/Screen';
 import { TeamSheet } from '@/components/TeamSheet';
 import { Text } from '@/components/Text';
-import { chaseAvailability, fetchFixture, fetchFixtureAvailability, fetchFixtureTeam, removeFixture } from '@/lib/api';
+import { chaseAvailability, fetchFixture, fetchFixtureAvailability, fetchFixtureMessages, fetchFixtureTeam, removeFixture } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { addFixtureToCalendar, calendarAvailable } from '@/lib/calendar';
 import { errorMessage } from '@/lib/errors';
@@ -36,6 +38,8 @@ export default function FixtureDetail() {
 
   const f = fixture.data;
   const canManage = !!f && managedSquads.some((s) => s.id === f.squad_id);
+
+  const messages = useQuery({ queryKey: ['fixtureMessages', fixtureId], queryFn: () => fetchFixtureMessages(fixtureId) });
 
   const replies = useQuery({
     queryKey: ['availability', fixtureId],
@@ -172,6 +176,17 @@ export default function FixtureDetail() {
         </>
       ) : null}
 
+      {/* Chat and notices */}
+      <SectionHeader title="Chat & notices" />
+      <Card onPress={() => router.push({ pathname: '/fixture-chat/[id]', params: { id: String(fixtureId) } })}
+        accessibilityLabel="Open chat and notices">
+        <ChatPreview messages={messages.data ?? []} />
+      </Card>
+
+      {!isPast ? <LiftsSection fixtureId={fixtureId} userId={userId} isHome={f.is_home} /> : null}
+
+      <FeesSection fixtureId={fixtureId} canManage={canManage} />
+
       {isPast ? (
         <Button
           title="View result"
@@ -188,7 +203,7 @@ export default function FixtureDetail() {
             <View style={{ gap: space.md }}>
               {[...yes, ...no, ...none].map((r) => (
                 <View key={r.user_id} style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-                  <Avatar first={r.first_name} surname={r.surname} size={36} />
+                  <Avatar userId={r.user_id} first={r.first_name} surname={r.surname} size={36} />
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyBold">{fullName(r)}</Text>
                     {r.reason || r.injury ? (
@@ -244,6 +259,30 @@ export default function FixtureDetail() {
         </>
       ) : null}
     </Screen>
+  );
+}
+
+function ChatPreview({ messages }: { messages: { body: string; is_notice: boolean; author: { first_name: string } | null }[] }) {
+  const notice = [...messages].reverse().find((m) => m.is_notice);
+  const last = messages[messages.length - 1];
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+      <View style={{ flex: 1, gap: 2 }}>
+        {notice ? (
+          <Text variant="smallBold" numberOfLines={2}>
+            📌 {notice.body}
+          </Text>
+        ) : null}
+        <Text variant="small" color="textMuted" numberOfLines={1}>
+          {last
+            ? `${messages.length} message${messages.length === 1 ? '' : 's'} · ${last.author?.first_name ?? 'Someone'}: ${last.body}`
+            : 'No messages yet. Sort out kit, lifts or timings here.'}
+        </Text>
+      </View>
+      <Text variant="smallBold" color="accent">
+        Open
+      </Text>
+    </View>
   );
 }
 

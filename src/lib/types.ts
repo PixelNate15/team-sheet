@@ -9,6 +9,7 @@ export interface Profile {
   theme: ThemePref;
   expo_push_token: string | null;
   notifications_enabled: boolean;
+  avatar_path: string | null;
 }
 
 export interface Club {
@@ -30,6 +31,7 @@ export interface Squad {
   ranking: number;
   division_id: number | null;
   captain_id: string | null;
+  default_match_fee_pence: number | null;
 }
 
 export interface Division {
@@ -76,6 +78,7 @@ export interface FixtureRow {
   opponent_league_position: number | null;
   notes: string | null;
   team_selected_at: string | null;
+  match_fee_pence: number | null;
   divisions?: { name: string } | null;
   squads?: { name: string } | null;
 }
@@ -306,4 +309,91 @@ export interface LeagueRowInput {
   played: number;
   points: number;
   is_own_team: boolean;
+}
+
+// ---------------------------------------------------------------- batch 2
+
+export interface LiftRow {
+  user_id: string;
+  name: string;
+  kind: 'offer' | 'need';
+  seats: number | null;
+  seats_taken: number | null;
+  note: string | null;
+  driver_id: string | null;
+  driver_name: string | null;
+}
+
+export interface FixtureMessage {
+  id: number;
+  fixture_id: number;
+  user_id: string;
+  body: string;
+  is_notice: boolean;
+  created_at: string;
+  author: { first_name: string; surname: string; avatar_path: string | null } | null;
+}
+
+export interface FixtureFee {
+  user_id: string;
+  name: string;
+  fee_pence: number;
+  paid: boolean;
+  paid_at: string | null;
+}
+
+export interface MyFee {
+  fixture_id: number;
+  opponent_name: string;
+  is_home: boolean;
+  fixture_date: string;
+  fee_pence: number;
+  paid: boolean;
+  paid_at: string | null;
+}
+
+export interface OutstandingFee {
+  user_id: string;
+  name: string;
+  fixtures_owed: number;
+  amount_pence: number;
+}
+
+export interface ClubInvite {
+  id: number;
+  club_id: number;
+  email: string;
+  first_name: string | null;
+  surname: string | null;
+  squad_id: number | null;
+  created_at: string;
+  accepted_at: string | null;
+  squads?: { name: string } | null;
+}
+
+export interface MyInvite {
+  invite_id: number;
+  club_id: number;
+  club_name: string;
+  squad_name: string | null;
+}
+
+export interface InviteImportResult {
+  added: number;
+  updated: number;
+  already_members: number;
+  invalid: number;
+}
+
+export interface SeasonReport {
+  club: string;
+  season: string;
+  generated_at: string;
+  squads: {
+    name: string;
+    division: string | null;
+    fixtures: { date: string; opponent: string; is_home: boolean; sets_won: number | null; sets_lost: number | null }[];
+    players: { name: string; fixtures: number; rubbers: number; wins: number; form: number | null }[];
+    fees_outstanding_pence: number;
+  }[];
 }

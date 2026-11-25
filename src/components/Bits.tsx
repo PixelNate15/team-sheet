@@ -1,7 +1,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'expo-image';
 import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, View, type ViewStyle } from 'react-native';
 
+import { useAvatarUrl } from '@/lib/avatars';
 import { initials } from '@/lib/format';
 import { avatarColor, font, radius, space, type Palette, useTheme } from '@/theme';
 
@@ -15,14 +17,36 @@ export function Avatar({
   surname,
   size = 44,
   ring,
+  userId,
 }: {
   first: string;
   surname: string;
   size?: number;
   ring?: keyof Palette;
+  /** Shows the player's profile photo when they have one. */
+  userId?: string | null;
 }) {
   const { c, isDark } = useTheme();
+  const photo = useAvatarUrl(userId);
   const col = avatarColor(`${first} ${surname}`, isDark);
+  if (photo) {
+    return (
+      <Image
+        source={{ uri: photo }}
+        accessibilityLabel={`${first} ${surname}`}
+        contentFit="cover"
+        transition={150}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: ring ? 2 : 0,
+          borderColor: ring ? c[ring] : undefined,
+          backgroundColor: col.bg,
+        }}
+      />
+    );
+  }
   // The line height must grow with the font size, or the body style's 22px
   // line height clips the initials on large avatars (e.g. the player screen).
   const fontSize = Math.round(size * 0.38);

@@ -7,24 +7,33 @@ import { supabase } from './supabase';
 import type {
   AvailabilityReply,
   AvailablePlayer,
+  ClubInvite,
   ClubPlayer,
   Division,
   Feedback,
+  FixtureFee,
+  FixtureMessage,
   FixtureNeedingResult,
   FixtureRow,
   FormPoint,
   LeagueRow,
   LeagueRowInput,
   Injury,
+  InviteImportResult,
+  LiftRow,
   MatchRow,
   Membership,
+  MyFee,
   MyFixture,
+  MyInvite,
   MyResult,
   OpponentRecord,
+  OutstandingFee,
   PartnerStat,
   Profile,
   RecommendedPlayer,
   Season,
+  SeasonReport,
   SelectedPlayer,
   Squad,
   SquadFixture,
@@ -96,7 +105,11 @@ export const createClub = (args: {
 export const joinClub = (code: string) => rpc<number>('join_club', { p_code: code });
 export const regenerateJoinCode = () => rpc<string>('regenerate_join_code');
 export const leaveClub = () => rpc<void>('leave_club');
-export const deleteMyAccount = () => rpc<void>('delete_my_account');
+/** Deletes the player's photo file (storage isn't cleaned up by the database), then the account. */
+export async function deleteMyAccount(avatarPath?: string | null) {
+  if (avatarPath) await supabase.storage.from('avatars').remove([avatarPath]);
+  await rpc<void>('delete_my_account');
+}
 
 // ---------------------------------------------------------------- fixtures (member)
 export const fetchMyFixtures = () => rpc<MyFixture[]>('my_fixtures');
@@ -339,3 +352,98 @@ export const canManageDivision = (divisionId: number) => rpc<boolean>('can_manag
 /** Returns how many upcoming fixtures had their opponent's league position updated. */
 export const saveLeagueTable = (divisionId: number, rows: LeagueRowInput[]) =>
   rpc<number>('save_league_table', { p_division: divisionId, p_rows: rows });
+
+// ---------------------------------------------------------------- lifts
+export const fetchLiftBoard = (fixtureId: number) => rpc<LiftRow[]>('lift_board', { p_fixture: fixtureId });
+/** kind null withdraws. */
+export const setMyLift = (fixtureId: number, kind: 'offer' | 'need' | null, seats: number | null, note: string | null) =>
+  rpc<void>('set_my_lift', { p_fixture: fixtureId, p_kind: kind, p_seats: seats, p_note: note });
+export const takePassenger = (fixtureId: number, passengerId: string) =>
+  rpc<void>('take_passenger', { p_fixture: fixtureId, p_passenger: passengerId });
+export const dropPassenger = (fixtureId: number, passengerId: string) =>
+  rpc<void>('drop_passenger', { p_fixture: fixtureId, p_passenger: passengerId });
+
+// ---------------------------------------------------------------- fixture chat
+export async function fetchFixtureMessages(fixtureId: number): Promise<FixtureMessage[]> {
+  return unwrap<FixtureMessage[]>(
+    await supabase
+      .from('fixture_messages')
+      .select('*, author:profiles(first_name, surname, avatar_path)')
+      .eq('fixture_id', fixtureId)
+      .order('created_at', { ascending: true })
+      .limit(300),
+  );
+}
+
+export async function postFixtureMessage(fixtureId: number, userId: string, body: string, isNotice: boolean) {
+  unwrap(
+    await supabase
+      .from('fixture_messages')
+      .insert({ fixture_id: fixtureId, user_id: userId, body: body.trim(), is_notice: isNotice }),
+  );
+}
+
+export async function deleteFixtureMessage(id: number) {
+  unwrap(await supabase.from('fixture_messages').delete().eq('id', id));
+}
+
+// ---------------------------------------------------------------- match fees
+export const fetchFixtureFees = (fixtureId: number) => rpc<FixtureFee[]>('fixture_fees', { p_fixture: fixtureId });
+export const fetchMyFees = () => rpc<MyFee[]>('my_fees');
+export const fetchOutstandingFees = (squadId: number) =>
+  rpc<OutstandingFee[]>('squad_fees_outstanding', { p_squad: squadId });
+export const setFixtureFee = (fixtureId: number, feePence: number | null) =>
+  rpc<void>('set_fixture_fee', { p_fixture: fixtureId, p_fee_pence: feePence });
+export const setFeePaid = (fixtureId: number, userId: string, paid: boolean) =>
+  rpc<void>('set_fee_paid', { p_fixture: fixtureId, p_user: userId, p_paid: paid });
+
+export async function setSquadDefaultFee(squadId: number, feePence: number | null) {
+  unwrap(await supabase.from('squads').update({ default_match_fee_pence: feePence }).eq('id', squadId));
+}
+
+// ---------------------------------------------------------------- photos
+export async function fetchClubAvatars(): Promise<{ id: string; avatar_path: string | null }[]> {
+  return unwrap(await supabase.from('profiles').select('id, avatar_path').not('avatar_path', 'is', null));
+}
+
+/** Upload a JPEG into the player's own folder and point their profile at it. Returns the new path. */
+export async function uploadAvatar(userId: string, jpeg: ArrayBuffer, previousPath: string | null): Promise<string> {
+  const path = `${userId}/${Date.now().toString(36)}.jpg`;
+  unwrap(await supabase.storage.from('avatars').upload(path, jpeg, { contentType: 'image/jpeg', upsert: false }));
+  unwrap(await supabase.from('profiles').update({ avatar_path: path }).eq('id', userId));
+  if (previousPath) await supabase.storage.from('avatars').remove([previousPath]);
+  return path;
+}
+
+export async function removeAvatar(userId: string, path: string | null) {
+  unwrap(await supabase.from('profiles').update({ avatar_path: null }).eq('id', userId));
+  if (path) await supabase.storage.from('avatars').remove([path]);
+}
+
+export function avatarUrl(path: string) {
+  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+}
+
+// ---------------------------------------------------------------- invites
+export const importInvites = (rows: { email: string; first_name: string; surname: string; squad_id: number | null }[]) =>
+  rpc<InviteImportResult>('import_invites', { p_rows: rows });
+export const fetchMyInvites = () => rpc<MyInvite[]>('my_invites');
+export const acceptInvite = (inviteId: number) => rpc<number>('accept_invite', { p_invite: inviteId });
+
+export async function fetchClubInvites(clubId: number): Promise<ClubInvite[]> {
+  return unwrap<ClubInvite[]>(
+    await supabase
+      .from('club_invites')
+      .select('*, squads(name)')
+      .eq('club_id', clubId)
+      .order('accepted_at', { ascending: true, nullsFirst: true })
+      .order('created_at', { ascending: false }),
+  );
+}
+
+export async function deleteInvite(id: number) {
+  unwrap(await supabase.from('club_invites').delete().eq('id', id));
+}
+
+// ---------------------------------------------------------------- season report
+export const fetchSeasonReport = (seasonId: number) => rpc<SeasonReport>('season_report', { p_season: seasonId });

@@ -241,7 +241,7 @@ function FixtureForm({
                 .filter((r) => r.pair_number === pair)
                 .map((r) => (
                   <View key={r.user_id} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1, backgroundColor: c.surface, padding: 6, borderRadius: radius.sm }}>
-                    <Avatar first={r.first_name} surname={r.surname} size={24} />
+                    <Avatar userId={r.user_id} first={r.first_name} surname={r.surname} size={24} />
                     <Text variant="small" numberOfLines={1} style={{ flex: 1 }}>
                       {r.first_name} {r.surname.charAt(0)}.
                     </Text>

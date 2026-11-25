@@ -68,7 +68,7 @@ export default function Me() {
     )
       return;
     try {
-      await deleteMyAccount();
+      await deleteMyAccount(me.profile.avatar_path);
       await signOut();
     } catch (e) {
       Alert.alert('Couldn’t delete account', errorMessage(e));
@@ -79,7 +79,7 @@ export default function Me() {
     <Screen>
       <Card onPress={() => router.push('/profile')}>
         <View style={styles.profile}>
-          <Avatar first={me.profile.first_name} surname={me.profile.surname} size={60} />
+          <Avatar userId={me.profile.id} first={me.profile.first_name} surname={me.profile.surname} size={60} />
           <View style={{ flex: 1, gap: 4 }}>
             <Text variant="heading">
               {me.profile.first_name} {me.profile.surname}

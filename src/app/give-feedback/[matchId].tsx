@@ -54,7 +54,7 @@ export default function GiveFeedback() {
     <Screen
       footer={<Button title="Send feedback" onPress={() => save.mutate()} disabled={!ready} loading={save.isPending} />}>
       <View style={{ alignItems: 'center', gap: space.sm }}>
-        <Avatar first={first} surname={rest.join(' ')} size={72} />
+        <Avatar userId={match?.partner_id} first={first} surname={rest.join(' ')} size={72} />
         <Text variant="title" align="center">
           {match?.partner_name ?? 'Your partner'}
         </Text>

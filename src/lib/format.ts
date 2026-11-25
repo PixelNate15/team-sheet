@@ -97,3 +97,18 @@ export function formatForm(form: number | null | undefined) {
 export function opponentLabel(f: { is_home: boolean; opponent_name: string }) {
   return `${f.is_home ? 'vs' : '@'} ${f.opponent_name}`;
 }
+
+/** 500 → "£5", 550 → "£5.50". */
+export function formatPence(pence: number | null | undefined) {
+  if (pence == null) return '–';
+  const pounds = pence / 100;
+  return `£${Number.isInteger(pounds) ? pounds : pounds.toFixed(2)}`;
+}
+
+/** "5", "5.5", "£5.50" → 550. Returns null for blank, NaN for anything else. */
+export function parsePounds(text: string): number | null {
+  const t = text.trim().replace(/^£/, '');
+  if (t === '') return null;
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return Number.NaN;
+  return Math.round(Number(t) * 100);
+}

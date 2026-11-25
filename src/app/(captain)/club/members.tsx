@@ -78,7 +78,7 @@ export default function Members() {
           {(q.data ?? []).map((p) => (
             <Card key={p.user_id} onPress={() => actions(p)}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-                <Avatar first={p.first_name} surname={p.surname} size={40} />
+                <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={40} />
                 <View style={{ flex: 1, gap: 2 }}>
                   <Text variant="bodyBold">{fullName(p)}</Text>
                   <Text variant="small" color="textMuted">

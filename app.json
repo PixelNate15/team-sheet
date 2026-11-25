@@ -66,7 +66,15 @@
           "remindersPermission": false
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Team Sheet uses your photos so you can choose a profile picture for your club.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

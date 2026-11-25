@@ -30,7 +30,7 @@ export function TeamSheet({ players, highlight }: { players: Slot[]; highlight?:
               const p = players.find((x) => x.pair_number === pair && x.selection_order === order);
               return p ? (
                 <View key={order} style={styles.player}>
-                  <Avatar first={p.first_name} surname={p.surname} size={34} ring={p.user_id === highlight ? 'success' : undefined} />
+                  <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={34} ring={p.user_id === highlight ? 'success' : undefined} />
                   <Text variant="smallBold" numberOfLines={2} style={{ flex: 1 }}>
                     {fullName(p)}
                   </Text>

@@ -60,7 +60,7 @@ export default function FeedbackTab() {
                 key={r.match_id}
                 onPress={() => router.push({ pathname: '/give-feedback/[matchId]', params: { matchId: String(r.match_id) } })}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-                  <Avatar first={first} surname={rest.join(' ')} />
+                  <Avatar userId={r.partner_id} first={first} surname={rest.join(' ')} />
                   <View style={{ flex: 1 }}>
                     <Text variant="bodyBold">Rate {r.partner_name}</Text>
                     <Text variant="small" color="textMuted">

@@ -25,7 +25,7 @@ export function PlayerCard({
   return (
     <Card onPress={onPress} onLongPress={onLongPress} selected={selected} accessibilityLabel={fullName(p)}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
-        <Avatar first={p.first_name} surname={p.surname} size={48} ring={selected ? 'accent' : undefined} />
+        <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={48} ring={selected ? 'accent' : undefined} />
         <View style={{ flex: 1, gap: 3 }}>
           <Text variant="bodyBold" numberOfLines={1}>
             {fullName(p)}

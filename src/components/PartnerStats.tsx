@@ -82,7 +82,7 @@ export function PartnerStatsList({
       onPress={onPressPartner ? (s) => onPressPartner(s.partner_id) : undefined}
       render={(s) => (
         <>
-          <Avatar first={s.first_name} surname={s.surname} size={36} />
+          <Avatar userId={s.partner_id} first={s.first_name} surname={s.surname} size={36} />
           <View style={{ flex: 1, gap: 1 }}>
             <Text variant="bodyBold" numberOfLines={1}>
               {s.first_name} {s.surname}
@@ -114,9 +114,9 @@ export function PairingsList({ pairings, limit = 5 }: { pairings: SquadPairing[]
         return (
           <>
             <View style={{ flexDirection: 'row' }}>
-              <Avatar first={f1} surname={s1.join(' ')} size={32} />
+              <Avatar userId={p.player_1_id} first={f1} surname={s1.join(' ')} size={32} />
               <View style={{ marginLeft: -10, borderRadius: 18, borderWidth: 2, borderColor: c.surface }}>
-                <Avatar first={f2} surname={s2.join(' ')} size={32} />
+                <Avatar userId={p.player_2_id} first={f2} surname={s2.join(' ')} size={32} />
               </View>
             </View>
             <View style={{ flex: 1, gap: 1 }}>

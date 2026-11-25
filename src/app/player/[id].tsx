@@ -44,7 +44,7 @@ export default function PlayerDetail() {
     <Screen onRefresh={refresh}>
       <Stack.Screen options={{ title: fullName(p) }} />
       <View style={{ alignItems: 'center', gap: space.sm }}>
-        <Avatar first={p.first_name} surname={p.surname} size={84} />
+        <Avatar userId={p.user_id} first={p.first_name} surname={p.surname} size={84} />
         <Text variant="title">{fullName(p)}</Text>
         <View style={{ flexDirection: 'row', gap: space.xs }}>
           {p.squad_name ? <Chip label={p.squad_name} tone="accent" /> : <Chip label="No team" />}
