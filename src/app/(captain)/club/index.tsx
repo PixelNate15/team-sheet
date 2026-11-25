@@ -81,12 +81,27 @@ export default function Club() {
         </Card>
       )}
 
+      <SectionHeader title="Team admin" />
+      <Card padded={false}>
+        <Pressable style={styles.row} onPress={() => router.push('/club/fees')}>
+          <ListRow icon="cash-outline" title="Match fees" subtitle="Who owes what, and the usual fee" />
+        </Pressable>
+        <View style={[styles.divider, { backgroundColor: c.border }]} />
+        <Pressable style={styles.row} onPress={() => router.push('/club/report')}>
+          <ListRow icon="document-text-outline" title="Season report" subtitle="Results and player stats as a PDF" />
+        </Pressable>
+      </Card>
+
       {isAdmin ? (
         <>
           <SectionHeader title="Club admin" />
           <Card padded={false}>
             <Pressable style={styles.row} onPress={() => router.push('/club/members')}>
               <ListRow icon="people-outline" title="Members" subtitle="Roles, teams and removing members" />
+            </Pressable>
+            <View style={[styles.divider, { backgroundColor: c.border }]} />
+            <Pressable style={styles.row} onPress={() => router.push('/club/invites')}>
+              <ListRow icon="cloud-upload-outline" title="Import players" subtitle="Invite a list of players from a CSV file" />
             </Pressable>
             <View style={[styles.divider, { backgroundColor: c.border }]} />
             <Pressable style={styles.row} onPress={() => router.push('/club/squads')}>

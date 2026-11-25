@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
@@ -7,7 +8,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { Hero, Logo } from '@/components/Hero';
 import { Text } from '@/components/Text';
-import { joinClub } from '@/lib/api';
+import { acceptInvite, fetchMyInvites, joinClub } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { font, radius, space, useTheme } from '@/theme';
@@ -19,6 +20,24 @@ export default function JoinClub() {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // An admin may have imported this email: offer to join straight away.
+  const invites = useQuery({ queryKey: ['myInvites'], queryFn: fetchMyInvites });
+  const invite = invites.data?.[0];
+  const [accepting, setAccepting] = useState(false);
+
+  async function accept() {
+    if (!invite) return;
+    setAccepting(true);
+    setError(null);
+    try {
+      await acceptInvite(invite.invite_id);
+      await refreshMe();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setAccepting(false);
+    }
+  }
 
   async function join() {
     if (code.trim().length !== 6) {
@@ -52,9 +71,21 @@ export default function JoinClub() {
           </Text>
         </Hero>
 
+        {invite ? (
+          <Card selected>
+            <View style={{ gap: space.md }}>
+              <Text variant="heading">You’ve been invited</Text>
+              <Text variant="body" color="textMuted">
+                {invite.club_name} added you{invite.squad_name ? ` to ${invite.squad_name}` : ''}. Join now, no code needed.
+              </Text>
+              <Button title={`Join ${invite.club_name}`} icon="checkmark-circle-outline" onPress={accept} loading={accepting} />
+            </View>
+          </Card>
+        ) : null}
+
         <Card>
           <View style={{ gap: space.md }}>
-            <Text variant="heading">Join with a club code</Text>
+            <Text variant="heading">{invite ? 'Or join a different club' : 'Join with a club code'}</Text>
             <Text variant="small" color="textMuted">
               Ask your captain or club admin for the 6-character code.
             </Text>

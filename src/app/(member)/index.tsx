@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
@@ -9,8 +10,9 @@ import { DateBlock } from '@/components/FixtureCard';
 import { Hero } from '@/components/Hero';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
+import { fetchMyFees } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
-import { fullDate, longDate, relativeDay, shortTime } from '@/lib/format';
+import { daysUntil, formatPence, fullDate, longDate, relativeDay, shortTime } from '@/lib/format';
 import { feedbackToGive } from '@/lib/feedback';
 import { useGroupedResults, useMyFixtures, useMyInjury, useRefreshAll, useSetAvailability } from '@/lib/hooks';
 import type { MyFixture } from '@/lib/types';
@@ -27,6 +29,8 @@ export default function Home() {
   const next = fixtures.data?.[0];
   const needReply = fixtures.data?.filter((f) => f.is_available == null) ?? [];
   const needFeedback = feedbackToGive(results.data);
+  const fees = useQuery({ queryKey: ['myFees'], queryFn: fetchMyFees });
+  const owed = (fees.data ?? []).filter((f) => !f.paid && daysUntil(f.fixture_date) <= 0).reduce((n, f) => n + f.fee_pence, 0);
   const lastResult = results.groups[0];
 
   return (
@@ -80,7 +84,7 @@ export default function Home() {
         <EmptyState icon="calendar-outline" title="No fixtures coming up" message="Your captain hasn’t added any fixtures yet." />
       )}
 
-      {needReply.length > 0 || needFeedback.length > 0 ? (
+      {needReply.length > 0 || needFeedback.length > 0 || owed > 0 ? (
         <>
           <SectionHeader title="To do" />
           <Card padded={false}>
@@ -104,6 +108,19 @@ export default function Home() {
                   subtitle="Quick, private feedback after each fixture"
                 />
               </Pressable>
+            ) : null}
+            {owed > 0 ? (
+              <>
+                {needReply.length > 0 || needFeedback.length > 0 ? <View style={[styles.divider, { backgroundColor: c.border }]} /> : null}
+                <Pressable onPress={() => router.push('/me')} style={styles.todo}>
+                  <ListRow
+                    icon="cash-outline"
+                    tone="warning"
+                    title={`You owe ${formatPence(owed)} in match fees`}
+                    subtitle="Pay your captain; they’ll mark it as paid"
+                  />
+                </Pressable>
+              </>
             ) : null}
           </Card>
         </>

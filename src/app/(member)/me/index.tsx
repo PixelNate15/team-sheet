@@ -11,11 +11,11 @@ import { StudioMark } from '@/components/Hero';
 import { PartnerStatsList } from '@/components/PartnerStats';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { deleteMyAccount, fetchPartnerStats, leaveClub, updateProfile } from '@/lib/api';
+import { deleteMyAccount, fetchMyFees, fetchPartnerStats, leaveClub, updateProfile } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { PRIVACY_POLICY_URL, SUPPORT_EMAIL } from '@/lib/config';
 import { errorMessage } from '@/lib/errors';
-import { fullDate } from '@/lib/format';
+import { formatPence, fullDate } from '@/lib/format';
 import { confirm, useMyInjury } from '@/lib/hooks';
 import { registerForPush } from '@/lib/notifications';
 import type { ThemePref } from '@/lib/types';
@@ -27,6 +27,8 @@ export default function Me() {
   const { me, club, membership, userId, canCaptain, isAdmin, signOut, refreshMe } = useSignedIn();
   const injury = useMyInjury();
   const partners = useQuery({ queryKey: ['partnerStats', userId], queryFn: () => fetchPartnerStats(userId) });
+  const fees = useQuery({ queryKey: ['myFees'], queryFn: fetchMyFees });
+  const unpaid = (fees.data ?? []).filter((f) => !f.paid).reduce((n, f) => n + f.fee_pence, 0);
   const squad = me.squads.find((s) => s.id === me.mySquadId);
 
   const patch = useMutation({
@@ -118,6 +120,32 @@ export default function Me() {
           }
         />
       </Card>
+
+      {(fees.data ?? []).length > 0 ? (
+        <>
+          <SectionHeader title={`Match fees${unpaid ? ` · ${formatPence(unpaid)} to pay` : ''}`} />
+          <Card>
+            <View style={{ gap: space.md }}>
+              {(fees.data ?? []).slice(0, 8).map((f) => (
+                <Pressable
+                  key={f.fixture_id}
+                  onPress={() => router.push({ pathname: '/fixture/[id]', params: { id: String(f.fixture_id) } })}
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+                  <View style={{ flex: 1 }}>
+                    <Text variant="bodyBold" numberOfLines={1}>
+                      {f.is_home ? 'vs' : '@'} {f.opponent_name}
+                    </Text>
+                    <Text variant="small" color="textMuted">
+                      {fullDate(f.fixture_date)} · {formatPence(f.fee_pence)}
+                    </Text>
+                  </View>
+                  <Chip label={f.paid ? 'Paid' : 'Not paid'} tone={f.paid ? 'success' : 'warning'} />
+                </Pressable>
+              ))}
+            </View>
+          </Card>
+        </>
+      ) : null}
 
       <SectionHeader title="My partnerships" />
       {partners.data ? <PartnerStatsList stats={partners.data} /> : null}

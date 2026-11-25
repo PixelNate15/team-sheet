@@ -17,12 +17,15 @@ import {
   fetchFixture,
   fetchFixtureAvailability,
   fetchFixtureTeam,
+  fetchLeagueTable,
   fetchRecommendedTeam,
   saveFixture,
+  setFixtureFee,
 } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
-import { formatForm, shortTime, toIsoDate } from '@/lib/format';
+import { formatForm, formatPence, parsePounds, shortTime, toIsoDate } from '@/lib/format';
+import { leaguePositionFor } from '@/lib/league';
 import { useRefreshAll } from '@/lib/hooks';
 import { radius, space, useTheme } from '@/theme';
 
@@ -35,6 +38,10 @@ const schema = z.object({
     .trim()
     .refine((v) => v === '' || /^[1-9]\d{0,1}$/.test(v), 'A whole number from 1 to 99, or leave blank'),
   notes: z.string().max(1000, 'Keep notes under 1000 characters'),
+  fee: z.string().refine((v) => {
+    const p = parsePounds(v);
+    return p === null || (Number.isFinite(p) && p <= 100000);
+  }, 'An amount like 5 or 5.50 (up to £1,000), or leave blank'),
 });
 
 type FieldErrors = Partial<Record<keyof z.infer<typeof schema>, string>>;
@@ -65,8 +72,9 @@ export default function FixtureEdit() {
         isHome: f.is_home ? 'home' : 'away',
         leaguePosition: f.opponent_league_position ? String(f.opponent_league_position) : '',
         notes: f.notes ?? '',
+        fee: f.match_fee_pence ? formatPence(f.match_fee_pence).slice(1) : '',
       }
-    : { opponentName: '', date: nextSaturday(), time: '14:00', location: '', isHome: 'home', leaguePosition: '', notes: '' };
+    : { opponentName: '', date: nextSaturday(), time: '14:00', location: '', isHome: 'home', leaguePosition: '', notes: '', fee: '' };
 
   const initialSlots = emptySlots();
   for (const p of team.data ?? []) initialSlots[(p.pair_number - 1) * 2 + (p.selection_order - 1)] = p.user_id;
@@ -82,6 +90,8 @@ interface FormState {
   isHome: 'home' | 'away';
   leaguePosition: string;
   notes: string;
+  /** Match fee in pounds as typed, e.g. "5" or "5.50". */
+  fee: string;
 }
 
 function FixtureForm({
@@ -97,7 +107,7 @@ function FixtureForm({
 }) {
   const { c } = useTheme();
   const isNew = fixtureId == null;
-  const { activeSquad } = useSignedIn();
+  const { activeSquad, me } = useSignedIn();
   const refresh = useRefreshAll();
 
   const replies = useQuery({ queryKey: ['availability', fixtureId], queryFn: () => fetchFixtureAvailability(fixtureId!), enabled: !isNew });
@@ -106,7 +116,18 @@ function FixtureForm({
 
   const squadId = fixtureSquadId ?? activeSquad?.id ?? null;
 
-  const [form, setForm] = useState<FormState>(initialForm);
+  const squad = me.squads.find((s) => s.id === squadId);
+  // New fixtures start with the squad's usual match fee.
+  const [form, setForm] = useState<FormState>(() =>
+    isNew && squad?.default_match_fee_pence ? { ...initialForm, fee: formatPence(squad.default_match_fee_pence).slice(1) } : initialForm,
+  );
+  // League position filled in from the division's table when the opponent matches.
+  const league = useQuery({
+    queryKey: ['league', squad?.division_id],
+    queryFn: () => fetchLeagueTable(squad!.division_id!),
+    enabled: !!squad?.division_id,
+  });
+  const [autoPosition, setAutoPosition] = useState(false);
   const [slots, setSlots] = useState<Slots>(initialSlots);
   const [teamTouched, setTeamTouched] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -153,7 +174,13 @@ function FixtureForm({
             ? slots.flatMap((uid, i) => (uid ? [{ user_id: uid, pair_number: Math.floor(i / 2) + 1, selection_order: (i % 2) + 1 }] : []))
             : null,
       }),
-    onSuccess: async () => {
+    onSuccess: async (savedId) => {
+      const fee = parsePounds(form.fee);
+      const before = initialForm.fee ? parsePounds(initialForm.fee) : null;
+      const id = fixtureId ?? savedId;
+      if (id && (isNew ? fee != null : fee !== before)) {
+        await setFixtureFee(id, fee).catch((e) => Alert.alert('Fixture saved, but not the match fee', errorMessage(e)));
+      }
       await refresh();
       router.back();
     },
@@ -199,7 +226,23 @@ function FixtureForm({
     <Screen footer={<Button title={isNew ? 'Add fixture' : 'Save changes'} onPress={submit} loading={save.isPending} />}>
       <Stack.Screen options={{ title: isNew ? 'New fixture' : 'Edit fixture' }} />
 
-      <TextField label="Opponent" value={form.opponentName} onChangeText={set('opponentName')} placeholder="e.g. Hillside LTC 2" error={errors.opponentName} maxLength={100} />
+      <TextField
+        label="Opponent"
+        value={form.opponentName}
+        onChangeText={(name) => {
+          const pos = leaguePositionFor(name, league.data);
+          setForm((f) => {
+            // Fill the position from the table, but never overwrite one the captain typed.
+            if (pos != null && (f.leaguePosition === '' || autoPosition)) return { ...f, opponentName: name, leaguePosition: String(pos) };
+            if (pos == null && autoPosition) return { ...f, opponentName: name, leaguePosition: '' };
+            return { ...f, opponentName: name };
+          });
+          setAutoPosition(pos != null && (form.leaguePosition === '' || autoPosition));
+        }}
+        placeholder="e.g. Hillside LTC 2"
+        error={errors.opponentName}
+        maxLength={100}
+      />
       <Segmented
         value={form.isHome}
         onChange={set('isHome')}
@@ -216,10 +259,22 @@ function FixtureForm({
       <TextField
         label="Their league position (optional)"
         value={form.leaguePosition}
-        onChangeText={set('leaguePosition')}
+        onChangeText={(v) => {
+          setAutoPosition(false);
+          set('leaguePosition')(v);
+        }}
         keyboardType="number-pad"
         error={errors.leaguePosition}
-        hint="Used to weight form by opponent strength"
+        hint={autoPosition ? 'Filled in from the league table' : 'Used to weight form by opponent strength'}
+      />
+      <TextField
+        label="Match fee per player in £ (optional)"
+        value={form.fee}
+        onChangeText={set('fee')}
+        keyboardType="decimal-pad"
+        placeholder="e.g. 5"
+        error={errors.fee}
+        hint="Players in the team see what they owe; you tick off payments on the fixture"
       />
       <TextField label="Notes (optional)" value={form.notes} onChangeText={set('notes')} multiline maxLength={1000} error={errors.notes} />
 
