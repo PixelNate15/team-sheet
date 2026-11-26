@@ -22,6 +22,11 @@ begin
      and not exists (select 1 from public.squads s where s.division_id = d.id)
      and not exists (select 1 from public.fixtures f where f.division_id = d.id);
 
+  -- Batch 3 sample: the admin's club notice and the sample venues.
+  delete from public.chat_messages
+   where fixture_id is null and body = 'Club AGM on Wednesday 10 December, 7pm in the clubhouse. All welcome.';
+  delete from public.venues where updated_by is null and name in ('Northfield', 'Hillside Park');
+
   -- Sample invites (batch 2 extras).
   delete from public.club_invites where email like '%@teamsheet.test';
 

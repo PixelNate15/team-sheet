@@ -13,12 +13,15 @@
 ### As a player
 - See your upcoming fixtures, with the date, time, venue and whether it's home or away.
 - Say whether you can play with one tap, and get reminders if you haven't replied.
+- Going on holiday? Add your away dates once, and every fixture in them is marked for you.
 - Find out as soon as you're selected, and who your partner is.
 - Let your captain know when you're injured, and when you're fit again.
 - Follow your results, form and record with each partner, including your best pairings.
 - Rate your partner after a match. The feedback helps captains choose pairings.
 - Sort out lifts to away matches: offer seats in your car, or ask for a lift.
-- Chat with the team about each fixture, and see your captain's pinned notices.
+- Chat with the team about each fixture, or with the whole club, and see pinned notices.
+- Run quick polls, like which night suits everyone for the social.
+- Played in a match? Send the scores, and your captain checks and saves them.
 - See any match fees you owe.
 - Add a profile photo so everyone knows who's who.
 - Add fixtures to your phone's calendar.
@@ -27,12 +30,15 @@
 - Manage your squad and fixtures.
 - See who's available at a glance, and chase anyone who hasn't replied.
 - Pick the team with help from form scores and a suggested line-up.
+- Get told straight away if a picked player pulls out, with the best replacement suggested.
+- See who's been picked versus available, so selection stays fair.
 - Short of players? Borrow someone from a lower team for one match. Each player can play up twice a season, and Team Sheet keeps count.
 - Enter rubber-by-rubber scores, and Team Sheet works out the result.
 - Keep your division's league table up to date. Opponents' positions fill in automatically when you add a fixture.
+- Save each opponent's venue, parking and court notes once, and away fixtures fill them in.
 - Set a match fee and tick off who's paid.
 - Post notices that go straight to the whole team.
-- Create a season report PDF with every result and each player's record.
+- Create a season report PDF with every result, each player's record and the season's awards.
 
 ### As a club admin
 - Create the club and share a 6-character code so members can join.
@@ -47,7 +53,8 @@ Team Sheet keeps everyone in the loop automatically. You'll get a notification w
 - your captain asks for your availability
 - a fixture is 5 days and 2 days away and you haven't replied
 - a result is posted (with a nudge to rate your partner)
-- your captain posts a notice
+- your captain posts a notice, or an admin posts a club notice
+- (captains) a picked player pulls out, or a result is waiting to be entered or checked
 - someone gives you a lift, or you're asked to play up
 
 You can turn notifications off at any time in **Me**.

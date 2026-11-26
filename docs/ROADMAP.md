@@ -16,6 +16,16 @@
 - League positions filled in from the table
 - Playing up: borrowing a player from a lower team, at most twice per player per season
 
+**Feature batch 3:**
+- Club-wide chat
+- Polls in chats
+- Drop-out alerts with a suggested replacement
+- Result reminders, and players sending scores for the captain to check
+- Selection balance
+- Away dates (holidays)
+- Venue book
+- Season awards
+
 ## Needed before store release
 
 - [ ] Confirm the app name
