@@ -25,7 +25,7 @@ begin
   if u is null then
     raise exception 'Load the main sample first (npm run db:seed).';
   end if;
-  if exists (select 1 from public.fixture_messages m join public.fixtures f on f.id = m.fixture_id
+  if exists (select 1 from public.chat_messages m join public.fixtures f on f.id = m.fixture_id
               where f.notes like v_tag || '%') then
     raise notice 'Batch 2 sample data is already loaded.';
     return;
@@ -51,11 +51,11 @@ begin
 
   -- Notice and chat on the next away fixture.
   if v_next is not null then
-    insert into public.fixture_messages (fixture_id, user_id, body, is_notice, created_at) values
-      (v_next, v_admin, 'Meet in the club car park at 13:15. Bring two new tubes of balls, please.', true, now() - interval '5 hours'),
-      (v_next, (u ->> 'Oliver')::uuid, 'I can take three. Leaving at 13:00 sharp.', false, now() - interval '4 hours'),
-      (v_next, (u ->> 'Tom')::uuid, 'Thanks Oliver, put me down.', false, now() - interval '3 hours'),
-      (v_next, (u ->> 'James')::uuid, 'Is anyone going from the station side?', false, now() - interval '1 hour');
+    insert into public.chat_messages (club_id, fixture_id, user_id, body, is_notice, created_at) values
+      (v_club, v_next, v_admin, 'Meet in the club car park at 13:15. Bring two new tubes of balls, please.', true, now() - interval '5 hours'),
+      (v_club, v_next, (u ->> 'Oliver')::uuid, 'I can take three. Leaving at 13:00 sharp.', false, now() - interval '4 hours'),
+      (v_club, v_next, (u ->> 'Tom')::uuid, 'Thanks Oliver, put me down.', false, now() - interval '3 hours'),
+      (v_club, v_next, (u ->> 'James')::uuid, 'Is anyone going from the station side?', false, now() - interval '1 hour');
 
     insert into public.fixture_lifts (fixture_id, user_id, kind, seats, note, driver_id) values
       (v_next, (u ->> 'Oliver')::uuid, 'offer', 3, 'Leaving the club at 13:00', null),

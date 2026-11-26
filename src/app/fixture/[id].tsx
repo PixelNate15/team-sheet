@@ -14,7 +14,7 @@ import {
   chaseAvailability,
   fetchFixture,
   fetchFixtureAvailability,
-  fetchFixtureMessages,
+  fetchMessages,
   fetchFixtureTeam,
   releaseBorrowedPlayer,
   removeFixture,
@@ -47,7 +47,8 @@ export default function FixtureDetail() {
   const f = fixture.data;
   const canManage = !!f && managedSquads.some((s) => s.id === f.squad_id);
 
-  const messages = useQuery({ queryKey: ['fixtureMessages', fixtureId], queryFn: () => fetchFixtureMessages(fixtureId) });
+  const { club } = useSignedIn();
+  const messages = useQuery({ queryKey: ['messages', club.id, fixtureId], queryFn: () => fetchMessages(club.id, fixtureId) });
 
   const replies = useQuery({
     queryKey: ['availability', fixtureId],

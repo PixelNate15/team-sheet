@@ -328,12 +328,16 @@ export interface LiftRow {
   driver_name: string | null;
 }
 
-export interface FixtureMessage {
+export interface ChatMessage {
   id: number;
-  fixture_id: number;
+  club_id: number;
+  /** null for the club-wide chat */
+  fixture_id: number | null;
   user_id: string;
   body: string;
   is_notice: boolean;
+  /** A poll: the body is the question. */
+  poll: { options: string[] } | null;
   created_at: string;
   author: { first_name: string; surname: string; avatar_path: string | null } | null;
 }

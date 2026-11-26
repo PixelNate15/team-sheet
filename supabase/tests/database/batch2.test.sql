@@ -95,21 +95,21 @@ select throws_ok($$ select public.set_my_lift(9801, 'need') $$, 'P0001', null, '
 
 -- ------------------------------------------------------------- messages
 select tests.login('00000000-0000-0000-0000-0000000007b1');
-select lives_ok($$ insert into public.fixture_messages (fixture_id, user_id, body) values (9801, auth.uid(), 'Who''s bringing balls?') $$,
+select lives_ok($$ insert into public.chat_messages (club_id, fixture_id, user_id, body) values (9701, 9801, auth.uid(), 'Who''s bringing balls?') $$,
   'a member can post in the fixture chat');
-select throws_ok($$ insert into public.fixture_messages (fixture_id, user_id, body, is_notice) values (9801, auth.uid(), 'Notice!', true) $$,
+select throws_ok($$ insert into public.chat_messages (club_id, fixture_id, user_id, body, is_notice) values (9701, 9801, auth.uid(), 'Notice!', true) $$,
   '42501', null, 'a member cannot post a notice');
-select throws_ok($$ insert into public.fixture_messages (fixture_id, user_id, body) values (9801, '00000000-0000-0000-0000-0000000007b2', 'Fake') $$,
+select throws_ok($$ insert into public.chat_messages (club_id, fixture_id, user_id, body) values (9701, 9801, '00000000-0000-0000-0000-0000000007b2', 'Fake') $$,
   '42501', null, 'nobody can post as someone else');
 
 select tests.login('00000000-0000-0000-0000-0000000007a1');
-select lives_ok($$ insert into public.fixture_messages (fixture_id, user_id, body, is_notice) values (9801, auth.uid(), 'Meet at 13:15', true) $$,
+select lives_ok($$ insert into public.chat_messages (club_id, fixture_id, user_id, body, is_notice) values (9701, 9801, auth.uid(), 'Meet at 13:15', true) $$,
   'the captain can post a notice');
-select is((select count(*)::int from public.fixture_messages where fixture_id = 9801), 2, 'the club sees both messages');
-select lives_ok($$ delete from public.fixture_messages where body = 'Who''s bringing balls?' $$, 'the captain can remove a message');
+select is((select count(*)::int from public.chat_messages where fixture_id = 9801), 2, 'the club sees both messages');
+select lives_ok($$ delete from public.chat_messages where body = 'Who''s bringing balls?' $$, 'the captain can remove a message');
 
 select tests.login('00000000-0000-0000-0000-0000000007c1');
-select is((select count(*)::int from public.fixture_messages where fixture_id = 9801), 0, 'another club cannot read the chat');
+select is((select count(*)::int from public.chat_messages where fixture_id = 9801), 0, 'another club cannot read the chat');
 
 -- ------------------------------------------------------------- match fees
 select tests.login('00000000-0000-0000-0000-0000000007b1');

@@ -3,6 +3,7 @@
  * but runs through Supabase (Row Level Security + RPC functions) instead of
  * a direct MariaDB connection.
  */
+import type { PollVote } from './polls';
 import { supabase } from './supabase';
 import type {
   AvailabilityReply,
@@ -13,7 +14,7 @@ import type {
   Division,
   Feedback,
   FixtureFee,
-  FixtureMessage,
+  ChatMessage,
   FixtureNeedingResult,
   FixtureRow,
   FormPoint,
@@ -364,29 +365,52 @@ export const takePassenger = (fixtureId: number, passengerId: string) =>
 export const dropPassenger = (fixtureId: number, passengerId: string) =>
   rpc<void>('drop_passenger', { p_fixture: fixtureId, p_passenger: passengerId });
 
-// ---------------------------------------------------------------- fixture chat
-export async function fetchFixtureMessages(fixtureId: number): Promise<FixtureMessage[]> {
-  return unwrap<FixtureMessage[]>(
-    await supabase
-      .from('fixture_messages')
-      .select('*, author:profiles(first_name, surname, avatar_path)')
-      .eq('fixture_id', fixtureId)
-      .order('created_at', { ascending: true })
-      .limit(300),
-  );
+// ---------------------------------------------------------------- chat (club and fixtures)
+/** The club chat (fixtureId null) or one fixture's chat, oldest first. */
+export async function fetchMessages(clubId: number, fixtureId: number | null): Promise<ChatMessage[]> {
+  let q = supabase
+    .from('chat_messages')
+    .select('*, author:profiles(first_name, surname, avatar_path)')
+    .eq('club_id', clubId)
+    .order('created_at', { ascending: false })
+    .limit(300);
+  q = fixtureId == null ? q.is('fixture_id', null) : q.eq('fixture_id', fixtureId);
+  const rows = unwrap<ChatMessage[]>(await q);
+  return rows.reverse();
 }
 
-export async function postFixtureMessage(fixtureId: number, userId: string, body: string, isNotice: boolean) {
+export async function postMessage(v: {
+  clubId: number;
+  fixtureId: number | null;
+  userId: string;
+  body: string;
+  isNotice: boolean;
+  pollOptions?: string[] | null;
+}) {
   unwrap(
-    await supabase
-      .from('fixture_messages')
-      .insert({ fixture_id: fixtureId, user_id: userId, body: body.trim(), is_notice: isNotice }),
+    await supabase.from('chat_messages').insert({
+      club_id: v.clubId,
+      fixture_id: v.fixtureId,
+      user_id: v.userId,
+      body: v.body.trim(),
+      is_notice: v.isNotice,
+      poll: v.pollOptions?.length ? { options: v.pollOptions } : null,
+    }),
   );
 }
 
-export async function deleteFixtureMessage(id: number) {
-  unwrap(await supabase.from('fixture_messages').delete().eq('id', id));
+export async function deleteMessage(id: number) {
+  unwrap(await supabase.from('chat_messages').delete().eq('id', id));
 }
+
+export async function fetchPollVotes(messageIds: number[]): Promise<PollVote[]> {
+  if (messageIds.length === 0) return [];
+  return unwrap<PollVote[]>(await supabase.from('chat_poll_votes').select('message_id, user_id, option').in('message_id', messageIds));
+}
+
+/** Vote for an option, or pass null to take your vote back. */
+export const votePoll = (messageId: number, option: number | null) =>
+  rpc<void>('vote_poll', { p_message: messageId, p_option: option });
 
 // ---------------------------------------------------------------- match fees
 export const fetchFixtureFees = (fixtureId: number) => rpc<FixtureFee[]>('fixture_fees', { p_fixture: fixtureId });

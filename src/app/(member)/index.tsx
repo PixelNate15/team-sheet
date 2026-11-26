@@ -10,8 +10,9 @@ import { DateBlock } from '@/components/FixtureCard';
 import { Hero } from '@/components/Hero';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { fetchMyFees } from '@/lib/api';
+import { fetchMessages, fetchMyFees } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
+import { hasUnread } from '@/lib/chat-read';
 import { daysUntil, formatPence, fullDate, longDate, relativeDay, shortTime } from '@/lib/format';
 import { feedbackToGive } from '@/lib/feedback';
 import { useGroupedResults, useMyFixtures, useMyInjury, useRefreshAll, useSetAvailability } from '@/lib/hooks';
@@ -83,6 +84,8 @@ export default function Home() {
       ) : (
         <EmptyState icon="calendar-outline" title="No fixtures coming up" message="Your captain hasn’t added any fixtures yet." />
       )}
+
+      <ClubChatCard />
 
       {needReply.length > 0 || needFeedback.length > 0 || owed > 0 ? (
         <>
@@ -233,6 +236,31 @@ function NextFixture({ fixture: f }: { fixture: MyFixture }) {
         </View>
       </Hero>
     </Pressable>
+  );
+}
+
+/** Latest notice or message in the club chat, with a dot when there's something new. */
+function ClubChatCard() {
+  const { c } = useTheme();
+  const { club, userId } = useSignedIn();
+  const messages = useQuery({ queryKey: ['messages', club.id, null], queryFn: () => fetchMessages(club.id, null), refetchInterval: 60_000 });
+  const list = messages.data ?? [];
+  const last = list[list.length - 1];
+  const notice = [...list].reverse().find((m) => m.is_notice);
+  const unread = hasUnread(club.id, null, last, userId);
+  return (
+    <Card onPress={() => router.push('/club-chat')} accessibilityLabel={`Club chat${unread ? ', new messages' : ''}`}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+        <IconBubble icon="chatbubbles-outline" tone="accent" size={40} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="bodyBold">Club chat</Text>
+          <Text variant="small" color="textMuted" numberOfLines={1}>
+            {notice ? `📌 ${notice.body}` : last ? `${last.author?.first_name ?? 'Someone'}: ${last.poll ? '📊 ' : ''}${last.body}` : 'Say hello to everyone in the club'}
+          </Text>
+        </View>
+        {unread ? <View accessibilityLabel="New messages" style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: c.accent }} /> : null}
+      </View>
+    </Card>
   );
 }
 
