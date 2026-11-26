@@ -4,6 +4,7 @@ import { ScrollView, View } from 'react-native';
 
 import { Loading } from '@/components/Bits';
 import { Button } from '@/components/Button';
+import { CloseButton } from '@/components/CloseButton';
 import { Segmented, TextField } from '@/components/Field';
 import { Text } from '@/components/Text';
 import { mediumDate, opponentLabel } from '@/lib/format';
@@ -43,9 +44,12 @@ function AvailabilityForm({ fixtureId, fixture }: { fixtureId: number; fixture: 
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive">
       <View style={{ gap: 2 }}>
-        <Text variant="caption" color="textMuted">
-          AVAILABILITY
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Text variant="caption" color="textMuted">
+            AVAILABILITY
+          </Text>
+          <CloseButton />
+        </View>
         <Text variant="title">{fixture ? opponentLabel(fixture) : 'Fixture'}</Text>
         {fixture ? (
           <Text variant="body" color="textMuted">

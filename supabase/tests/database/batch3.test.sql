@@ -4,7 +4,7 @@
 -- Everything runs in a transaction and is rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(37);
+select plan(38);
 
 -- ------------------------------------------------------------------ test data
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -136,6 +136,8 @@ select is((select count(*)::int from public.result_submissions where fixture_id 
 -- ------------------------------------------------------------- selection balance
 select is((select picked from public.selection_balance(9901) where user_id = '00000000-0000-0000-0000-0000000009b1'), 2,
   'selection balance counts times picked this season (fixtures played so far)');
+select ok(not exists (select 1 from public.selection_balance(9901) where picked > said_yes),
+  'nobody is ever picked more often than they were available (picked counts as available)');
 select tests.login('00000000-0000-0000-0000-0000000009b2');
 select is_empty($$ select * from public.selection_balance(9901) $$, 'a member cannot see the selection balance');
 

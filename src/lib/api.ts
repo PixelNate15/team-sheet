@@ -376,7 +376,7 @@ export const dropPassenger = (fixtureId: number, passengerId: string) =>
 export async function fetchMessages(clubId: number, fixtureId: number | null): Promise<ChatMessage[]> {
   let q = supabase
     .from('chat_messages')
-    .select('*, author:profiles(first_name, surname, avatar_path)')
+    .select('*, author:profiles!chat_messages_user_id_fkey(first_name, surname, avatar_path)')
     .eq('club_id', clubId)
     .order('created_at', { ascending: false })
     .limit(300);

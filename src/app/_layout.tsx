@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import { AppState, Platform, View } from 'react-native';
 
 import { Button } from '@/components/Button';
+import { CloseButton } from '@/components/CloseButton';
 import { EmptyState } from '@/components/Bits';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
@@ -127,7 +128,8 @@ function RootNavigator() {
     headerTintColor: c.accent,
     headerTitleStyle: { color: c.text, fontFamily: font.bold },
   };
-  const modal = { ...header, presentation: 'modal' as const };
+  // Pop-up screens get a clear Close button; swiping down still closes them too.
+  const modal = { ...header, presentation: 'modal' as const, headerLeft: () => <CloseButton /> };
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: c.background } }}>

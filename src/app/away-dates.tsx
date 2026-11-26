@@ -68,10 +68,9 @@ export default function AwayDates() {
 
       <Card>
         <View style={{ gap: space.md }}>
-          <View style={{ flexDirection: 'row', gap: space.md }}>
-            <DateField label="From" value={from} onChange={setFrom} minimumDate={new Date()} />
-            <DateField label="To" value={to} onChange={setTo} minimumDate={new Date()} />
-          </View>
+          {/* Stacked: iOS's compact date pickers are too wide to sit side by side in a card. */}
+          <DateField label="From" value={from} onChange={setFrom} minimumDate={new Date()} />
+          <DateField label="To" value={to} onChange={setTo} minimumDate={new Date()} />
           <TextField label="Note (optional)" value={note} onChangeText={setNote} placeholder="e.g. Holiday" maxLength={100} />
           <Button title="Add away dates" icon="airplane-outline" loading={add.isPending} onPress={() => add.mutate()} />
         </View>
