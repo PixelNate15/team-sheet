@@ -87,6 +87,9 @@ export default function PlayerDetail() {
       <Card>
         <LineChart points={formPoints} decimals={3} />
       </Card>
+      <Text variant="small" color="textMuted">
+        Tap or drag along a chart to see the value of each point.
+      </Text>
 
       <SectionHeader title="Partner ratings · last 10" />
       {(
