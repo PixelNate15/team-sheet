@@ -1,44 +1,43 @@
 import * as Linking from 'expo-linking';
 import { Redirect, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { EmptyState, Loading } from '@/components/Bits';
 import { Button } from '@/components/Button';
-import { completeAuthLink, type AuthLinkResult } from '@/lib/auth-links';
+import { useAuth } from '@/lib/auth';
 import { space, useTheme } from '@/theme';
 
 /**
  * Opened by the links in Supabase's emails (confirm sign-up, reset password).
- * The link carries a login token; this screen turns it into a session.
+ * The link itself is handled by AuthProvider; this screen waits until the
+ * player is actually signed in before moving on, so the next screen's
+ * sign-in guard lets them through.
  */
 export default function AuthCallback() {
   const { c } = useTheme();
   const url = Linking.useLinkingURL();
-  const [result, setResult] = useState<AuthLinkResult | null>(null);
+  const { authLink, handleAuthUrl, clearAuthLink, session } = useAuth();
 
-  useEffect(() => {
-    if (!url) return;
-    let cancelled = false;
-    completeAuthLink(url).then((r) => {
-      if (!cancelled) setResult(r);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [url]);
+  useEffect(() => handleAuthUrl(url), [url, handleAuthUrl]);
 
-  if (result?.status === 'signed-in') {
-    return <Redirect href={result.type === 'recovery' ? '/reset-password' : '/'} />;
-  }
-
-  if (result?.status === 'error') {
+  if (authLink?.error) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', padding: space.xl, gap: space.lg, backgroundColor: c.background }}>
-        <EmptyState icon="link-outline" title="That link didn’t work" message={`${result.message} Try signing in, or ask for a new email.`} />
-        <Button title="Go to sign in" onPress={() => router.replace('/sign-in')} />
+        <EmptyState icon="link-outline" title="That link didn’t work" message={`${authLink.error} Try signing in, or ask for a new email.`} />
+        <Button
+          title="Go to sign in"
+          onPress={() => {
+            clearAuthLink();
+            router.replace('/sign-in');
+          }}
+        />
       </View>
     );
+  }
+
+  if (authLink && session) {
+    return <Redirect href={authLink.recovery ? '/reset-password' : '/'} />;
   }
 
   return <Loading />;

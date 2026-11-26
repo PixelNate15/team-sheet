@@ -6,12 +6,15 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
+import * as Linking from 'expo-linking';
 import { Appearance } from 'react-native';
 
 import { fetchMe, type Me } from './api';
+import { completeAuthLink } from './auth-links';
 import { supabase } from './supabase';
 import type { Squad } from './types';
 
@@ -31,6 +34,11 @@ interface AuthState {
   setActiveSquadId: (id: number) => void;
   refreshMe: () => Promise<unknown>;
   signOut: () => Promise<void>;
+  /** Outcome of the last email link (sign-up confirmation or password reset), once handled. */
+  authLink: { recovery: boolean; error: string | null } | null;
+  /** Handle an email link (safe to call more than once for the same link). */
+  handleAuthUrl: (url: string | null) => void;
+  clearAuthLink: () => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -48,6 +56,24 @@ export function AuthProvider({ children }: PropsWithChildren) {
       return null;
     }
   });
+
+  // Email links are handled here, as soon as the app opens, rather than only on
+  // the auth-callback screen: Expo Go can open a fresh copy of the app from a
+  // link without routing to that screen.
+  const [authLink, setAuthLink] = useState<AuthState['authLink']>(null);
+  const handled = useRef(new Set<string>());
+  const handleAuthUrl = useCallback((url: string | null) => {
+    if (!url || !/(access_token|error_description|error_code)=/.test(url) || handled.current.has(url)) return;
+    handled.current.add(url);
+    completeAuthLink(url).then((r) =>
+      setAuthLink(r.status === 'signed-in' ? { recovery: r.type === 'recovery', error: null } : { recovery: false, error: r.message }),
+    );
+  }, []);
+  useEffect(() => {
+    Linking.getInitialURL().then(handleAuthUrl).catch(() => {});
+    const sub = Linking.addEventListener('url', ({ url }) => handleAuthUrl(url));
+    return () => sub.remove();
+  }, [handleAuthUrl]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
@@ -115,6 +141,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setActiveSquadId,
     refreshMe: () => queryClient.invalidateQueries({ queryKey: ['me'] }),
     signOut,
+    authLink,
+    handleAuthUrl,
+    clearAuthLink: () => setAuthLink(null),
   };
 
   return <AuthContext value={value}>{children}</AuthContext>;

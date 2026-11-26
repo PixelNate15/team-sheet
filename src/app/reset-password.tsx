@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Button } from '@/components/Button';
 import { TextField } from '@/components/Field';
 import { Text } from '@/components/Text';
+import { useAuth } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { space, useTheme } from '@/theme';
@@ -25,6 +26,7 @@ export default function ResetPassword() {
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [errors, setErrors] = useState<Errors>({});
   const [busy, setBusy] = useState(false);
+  const { clearAuthLink } = useAuth();
 
   async function save() {
     const parsed = schema.safeParse(form);
@@ -42,6 +44,7 @@ export default function ResetPassword() {
       setErrors({ form: errorMessage(error) });
       return;
     }
+    clearAuthLink();
     Alert.alert('Password changed', 'Use your new password next time you sign in.');
     router.replace('/');
   }

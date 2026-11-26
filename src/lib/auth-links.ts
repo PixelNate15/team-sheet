@@ -92,5 +92,10 @@ export async function completeAuthLink(url: string): Promise<AuthLinkResult> {
 
   const { data } = await supabase.auth.getSession();
   if (data.session) return { status: 'signed-in', type };
-  return { status: 'error', message: 'This link has expired or has already been used.' };
+  return {
+    status: 'error',
+    message: url.includes('#')
+      ? 'This link has expired or has already been used.'
+      : 'The link reached the app without its sign-in details.',
+  };
 }

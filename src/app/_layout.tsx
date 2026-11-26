@@ -6,7 +6,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { DMSerifDisplay_400Regular } from '@expo-google-fonts/dm-serif-display';
 import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -82,10 +82,18 @@ function ThemedApp() {
 }
 
 function RootNavigator() {
-  const { session, me, meError, isLoading, canCaptain, userId, refreshMe, signOut } = useAuth();
+  const { session, me, meError, isLoading, canCaptain, userId, refreshMe, signOut, authLink } = useAuth();
   const { c } = useTheme();
   const signedIn = !!session;
   const inClub = !!me?.membership;
+
+  // Email links: once a reset link has signed the player in, go to "Choose a new
+  // password"; if a link failed, show why (auth-callback shows the message).
+  useEffect(() => {
+    if (isLoading || !authLink) return;
+    if (authLink.recovery && session) router.replace('/reset-password');
+    else if (authLink.error) router.replace('/auth-callback');
+  }, [authLink, session, isLoading]);
 
   useEffect(() => {
     if (!isLoading) SplashScreen.hideAsync();
