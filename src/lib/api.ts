@@ -10,6 +10,7 @@ import type {
   AvailablePlayer,
   BorrowablePlayer,
   ClubInvite,
+  AwayPeriod,
   ClubPlayer,
   Division,
   Feedback,
@@ -34,13 +35,17 @@ import type {
   PartnerStat,
   Profile,
   RecommendedPlayer,
+  ResultSubmission,
   Season,
   SeasonReport,
   SelectedPlayer,
+  SelectionBalanceRow,
   Squad,
+  SquadAwards,
   SquadFixture,
   SquadPairing,
   SquadResult,
+  Venue,
 } from './types';
 
 async function rpc<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
@@ -146,6 +151,7 @@ export async function setAvailability(fixtureId: number, userId: string, isAvail
       is_available: isAvailable,
       reason: isAvailable ? null : reason?.trim() || null,
       submitted_at: new Date().toISOString(),
+      source: null, // a reply the player gives themselves, not an automatic "Away" one
     }),
   );
 }
@@ -482,3 +488,57 @@ export const borrowPlayer = (fixtureId: number, userId: string) =>
   rpc<void>('borrow_player', { p_fixture: fixtureId, p_user: userId });
 export const releaseBorrowedPlayer = (fixtureId: number, userId: string) =>
   rpc<void>('release_borrowed_player', { p_fixture: fixtureId, p_user: userId });
+
+// ---------------------------------------------------------------- batch 3
+export const fetchReplacementSuggestion = (fixtureId: number) =>
+  rpc<{ user_id: string; name: string; form: number | null }[]>('suggest_replacement', { p_fixture: fixtureId });
+
+export async function fetchResultSubmission(fixtureId: number): Promise<ResultSubmission | null> {
+  const { data, error } = await supabase
+    .from('result_submissions')
+    .select('*, submitter:profiles(first_name, surname)')
+    .eq('fixture_id', fixtureId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as ResultSubmission | null;
+}
+
+export async function fetchPendingSubmissions(squadIds: number[]): Promise<(ResultSubmission & { fixtures: { opponent_name: string; squad_id: number } })[]> {
+  if (squadIds.length === 0) return [];
+  return unwrap(
+    await supabase
+      .from('result_submissions')
+      .select('*, submitter:profiles(first_name, surname), fixtures!inner(opponent_name, squad_id)')
+      .in('fixtures.squad_id', squadIds),
+  );
+}
+
+export const submitResult = (fixtureId: number, matches: unknown[]) =>
+  rpc<void>('submit_result', { p_fixture: fixtureId, p_matches: matches });
+
+export const fetchSelectionBalance = (squadId: number) => rpc<SelectionBalanceRow[]>('selection_balance', { p_squad: squadId });
+
+export async function fetchMyAwayPeriods(userId: string): Promise<AwayPeriod[]> {
+  return unwrap(
+    await supabase.from('away_periods').select('*').eq('user_id', userId).gte('ends_on', new Date().toISOString().slice(0, 10)).order('starts_on'),
+  );
+}
+/** Returns how many upcoming fixtures were marked "Away". */
+export const addAwayPeriod = (from: string, to: string, note: string) =>
+  rpc<number>('add_away_period', { p_from: from, p_to: to, p_note: note });
+export async function deleteAwayPeriod(id: number) {
+  unwrap(await supabase.from('away_periods').delete().eq('id', id));
+}
+
+export async function fetchVenues(clubId: number): Promise<Venue[]> {
+  return unwrap(await supabase.from('venues').select('*').eq('club_id', clubId).order('name'));
+}
+export async function saveVenue(v: { id?: number; clubId: number; name: string; address: string; notes: string; userId: string }) {
+  const row = { club_id: v.clubId, name: v.name.trim(), address: v.address.trim(), notes: v.notes.trim() || null, updated_by: v.userId, updated_at: new Date().toISOString() };
+  unwrap(v.id ? await supabase.from('venues').update(row).eq('id', v.id) : await supabase.from('venues').insert(row));
+}
+export async function deleteVenue(id: number) {
+  unwrap(await supabase.from('venues').delete().eq('id', id));
+}
+
+export const fetchSeasonAwards = (seasonId: number) => rpc<SquadAwards[]>('season_awards', { p_season: seasonId });

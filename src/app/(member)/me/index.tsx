@@ -120,6 +120,9 @@ export default function Me() {
           }
         />
       </Card>
+      <Card onPress={() => router.push('/away-dates')}>
+        <ListRow icon="airplane-outline" title="Away dates" subtitle="Holidays: mark yourself unavailable for a date range" />
+      </Card>
 
       {(fees.data ?? []).length > 0 ? (
         <>

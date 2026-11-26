@@ -13,6 +13,8 @@ export default function ClubLayout() {
       <Stack.Screen name="fees" options={{ title: 'Match fees', headerLargeTitle: false }} />
       <Stack.Screen name="report" options={{ title: 'Season report', headerLargeTitle: false }} />
       <Stack.Screen name="invites" options={{ title: 'Import players', headerLargeTitle: false }} />
+      <Stack.Screen name="balance" options={{ title: 'Selection balance', headerLargeTitle: false }} />
+      <Stack.Screen name="venues" options={{ title: 'Venues', headerLargeTitle: false }} />
     </Stack>
   );
 }

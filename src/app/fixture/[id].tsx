@@ -15,7 +15,11 @@ import {
   fetchFixture,
   fetchFixtureAvailability,
   fetchMessages,
+  fetchFixtureMatches,
   fetchFixtureTeam,
+  fetchReplacementSuggestion,
+  fetchResultSubmission,
+  fetchVenues,
   releaseBorrowedPlayer,
   removeFixture,
 } from '@/lib/api';
@@ -24,7 +28,8 @@ import { addFixtureToCalendar, calendarAvailable } from '@/lib/calendar';
 import { errorMessage } from '@/lib/errors';
 import { daysUntil, fullName, longDate, shortTime } from '@/lib/format';
 import { confirm, useMyFixtures, useRefreshAll } from '@/lib/hooks';
-import { space } from '@/theme';
+import { venueFor } from '@/lib/venues';
+import { space, useTheme } from '@/theme';
 
 function openMaps(location: string) {
   const q = encodeURIComponent(location);
@@ -50,11 +55,22 @@ export default function FixtureDetail() {
   const { club } = useSignedIn();
   const messages = useQuery({ queryKey: ['messages', club.id, fixtureId], queryFn: () => fetchMessages(club.id, fixtureId) });
 
+  const venues = useQuery({ queryKey: ['venues', club.id], queryFn: () => fetchVenues(club.id) });
+  const matches = useQuery({ queryKey: ['fixtureMatches', fixtureId], queryFn: () => fetchFixtureMatches(fixtureId) });
+  const submission = useQuery({ queryKey: ['resultSubmission', fixtureId], queryFn: () => fetchResultSubmission(fixtureId) });
+
   const replies = useQuery({
     queryKey: ['availability', fixtureId],
     queryFn: () => fetchFixtureAvailability(fixtureId),
     enabled: canManage,
   });
+
+  const suggestion = useQuery({
+    queryKey: ['replacement', fixtureId],
+    queryFn: () => fetchReplacementSuggestion(fixtureId),
+    enabled: canManage,
+  });
+  const { c } = useTheme();
 
   const chase = useMutation({
     mutationFn: () => chaseAvailability(fixtureId),
@@ -95,6 +111,11 @@ export default function FixtureDetail() {
     surname: p.profiles?.surname ?? '',
   }));
 
+  const pickedIds = new Set(players.map((p) => p.user_id));
+  const pulledOut = (replies.data ?? []).filter((r) => pickedIds.has(r.user_id) && r.is_available === false);
+  const venue = !f.is_home ? venueFor(f.opponent_name, venues.data) : null;
+  const hasResult = (matches.data ?? []).length > 0;
+  const amPicked = pickedIds.has(userId);
   const yes = replies.data?.filter((r) => r.is_available === true) ?? [];
   const no = replies.data?.filter((r) => r.is_available === false) ?? [];
   const none = replies.data?.filter((r) => r.is_available == null) ?? [];
@@ -123,6 +144,7 @@ export default function FixtureDetail() {
               </Text>
             }
           />
+          {venue?.notes ? <InfoRow icon="information-circle-outline" label="Venue notes" value={venue.notes} /> : null}
           {f.divisions?.name && f.division_id ? (
             <InfoRow
               icon="podium-outline"
@@ -156,6 +178,51 @@ export default function FixtureDetail() {
           />
         ) : null}
       </Card>
+
+      {canManage && !isPast && pulledOut.length > 0 ? (
+        <Card style={{ backgroundColor: c.warningSoft, borderColor: c.warning }}>
+          <View style={{ gap: space.sm }}>
+            <Text variant="bodyBold" style={{ color: c.warning }}>
+              {pulledOut.map((r) => r.first_name).join(' and ')} {pulledOut.length === 1 ? 'has' : 'have'} pulled out
+            </Text>
+            <Text variant="small" color="text">
+              {suggestion.data?.[0]
+                ? `Suggested replacement: ${suggestion.data[0].name}${suggestion.data[0].form != null ? ` (form ${Number(suggestion.data[0].form).toFixed(2)})` : ''}.`
+                : 'Nobody else in the team is available. You could borrow someone from a lower team.'}
+            </Text>
+            <Button title="Edit team" icon="swap-horizontal-outline" size="sm" variant="secondary"
+              onPress={() => router.push({ pathname: '/fixture-edit', params: { id: String(fixtureId) } })} />
+          </View>
+        </Card>
+      ) : null}
+
+      {isPast && !hasResult && (amPicked || canManage) ? (
+        <Card style={{ backgroundColor: c.accentSoft }}>
+          <View style={{ gap: space.sm }}>
+            <Text variant="bodyBold">
+              {submission.data
+                ? `${submission.data.submitter?.first_name ?? 'A player'} sent the scores`
+                : 'No result yet'}
+            </Text>
+            <Text variant="small" color="textMuted">
+              {submission.data
+                ? canManage
+                  ? 'Check them and save the result.'
+                  : 'Waiting for the captain to check and save them.'
+                : canManage
+                  ? 'Enter the scores, or ask one of the players to send them.'
+                  : 'Played in this one? Send the scores and the captain will check and save them.'}
+            </Text>
+            {canManage ? (
+              <Button title={submission.data ? 'Check and save the result' : 'Enter the result'} icon="create-outline" size="sm"
+                onPress={() => router.push({ pathname: '/result-entry/[fixtureId]', params: { fixtureId: String(fixtureId) } })} />
+            ) : (
+              <Button title={submission.data ? 'Send corrected scores' : 'Send the score'} icon="send-outline" size="sm" variant="secondary"
+                onPress={() => router.push({ pathname: '/send-result/[fixtureId]', params: { fixtureId: String(fixtureId) } })} />
+            )}
+          </View>
+        </Card>
+      ) : null}
 
       <SectionHeader title="Team" />
       {players.length ? (

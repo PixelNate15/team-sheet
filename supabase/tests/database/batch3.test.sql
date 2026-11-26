@@ -4,7 +4,7 @@
 -- Everything runs in a transaction and is rolled back.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(36);
+select plan(37);
 
 -- ------------------------------------------------------------------ test data
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -167,6 +167,8 @@ select throws_ok($$ insert into public.venues (club_id, name, address) values (9
 
 -- ------------------------------------------------------------- season awards
 select ok((public.season_awards(9901) -> 0 -> 'awards') @> '[{"title":"Most wins"}]', 'season awards include Most wins');
+select ok((public.season_awards(9901) -> 0 -> 'awards') @> '[{"title":"Best partnership","winner":"Coco & Pete"}]',
+  'Best partnership goes to the pair that won all 3 of their rubbers (not the pair that won 1 of 3)');
 select tests.login('00000000-0000-0000-0000-0000000009b2');
 select throws_ok($$ select public.season_awards(9901) $$, 'P0001', null, 'a member cannot see the season awards');
 

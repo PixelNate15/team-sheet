@@ -10,7 +10,7 @@ import { Card } from '@/components/Card';
 import { Segmented } from '@/components/Field';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { fetchSeasonReport, fetchSeasons } from '@/lib/api';
+import { fetchSeasonAwards, fetchSeasonReport, fetchSeasons } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { formatPence } from '@/lib/format';
@@ -30,9 +30,15 @@ export default function ReportScreen() {
     enabled: seasonId != null,
   });
 
+  const awards = useQuery({
+    queryKey: ['seasonAwards', seasonId],
+    queryFn: () => fetchSeasonAwards(seasonId!),
+    enabled: seasonId != null,
+  });
+
   const share = useMutation({
     mutationFn: async () => {
-      const { uri } = await Print.printToFileAsync({ html: seasonReportHtml(report.data!) });
+      const { uri } = await Print.printToFileAsync({ html: seasonReportHtml(report.data!, awards.data ?? []) });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Season report' });
       } else {
@@ -82,10 +88,35 @@ export default function ReportScreen() {
                     <Stat label="Won" value={String(won)} tone="success" style={{ flex: 1 }} />
                     <Stat label="Lost" value={String(played.length - won)} style={{ flex: 1 }} />
                   </View>
-                  <Text variant="small" color="textMuted" style={{ marginTop: space.md }}>
-                    {top ? `Most wins: ${top.name} (${top.wins} of ${top.rubbers} rubbers)` : 'No rubbers played yet.'}
-                    {s.fees_outstanding_pence ? ` · Fees outstanding ${formatPence(s.fees_outstanding_pence)}` : ''}
-                  </Text>
+                  {s.fees_outstanding_pence ? (
+                    <Text variant="small" color="textMuted" style={{ marginTop: space.md }}>
+                      Fees outstanding {formatPence(s.fees_outstanding_pence)}
+                    </Text>
+                  ) : null}
+                  {(awards.data?.find((a) => a.squad === s.name)?.awards ?? []).length ? (
+                    <View style={{ gap: space.sm, marginTop: space.md }}>
+                      <Text variant="caption" color="textMuted">
+                        AWARDS
+                      </Text>
+                      {awards.data!.find((a) => a.squad === s.name)!.awards.map((a) => (
+                        <View key={a.title} style={{ flexDirection: 'row', gap: space.sm }}>
+                          <Text variant="smallBold" color="accent" style={{ width: 130 }}>
+                            🏆 {a.title}
+                          </Text>
+                          <View style={{ flex: 1 }}>
+                            <Text variant="smallBold">{a.winner}</Text>
+                            <Text variant="small" color="textMuted">
+                              {a.detail}
+                            </Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : top ? null : (
+                    <Text variant="small" color="textMuted" style={{ marginTop: space.md }}>
+                      No rubbers played yet.
+                    </Text>
+                  )}
                 </Card>
               </View>
             );

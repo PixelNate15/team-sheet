@@ -88,7 +88,15 @@ export default function Club() {
         </Pressable>
         <View style={[styles.divider, { backgroundColor: c.border }]} />
         <Pressable style={styles.row} onPress={() => router.push('/club/report')}>
-          <ListRow icon="document-text-outline" title="Season report" subtitle="Results and player stats as a PDF" />
+          <ListRow icon="document-text-outline" title="Season report" subtitle="Results, awards and player stats as a PDF" />
+        </Pressable>
+        <View style={[styles.divider, { backgroundColor: c.border }]} />
+        <Pressable style={styles.row} onPress={() => router.push('/club/balance')}>
+          <ListRow icon="scale-outline" title="Selection balance" subtitle="Who’s been picked versus available" />
+        </Pressable>
+        <View style={[styles.divider, { backgroundColor: c.border }]} />
+        <Pressable style={styles.row} onPress={() => router.push('/club/venues')}>
+          <ListRow icon="location-outline" title="Venues" subtitle="Opponents’ addresses, parking and courts" />
         </Pressable>
       </Card>
 

@@ -1,5 +1,5 @@
 import { formatPence, mediumDate } from './format';
-import type { SeasonReport } from './types';
+import type { SeasonReport, SquadAwards } from './types';
 
 const esc = (s: string | number | null | undefined) =>
   String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]!);
@@ -12,7 +12,7 @@ function outcome(won: number | null, lost: number | null) {
 }
 
 /** The season report as a printable HTML page in the Terracotta style. */
-export function seasonReportHtml(r: SeasonReport): string {
+export function seasonReportHtml(r: SeasonReport, awards: SquadAwards[] = []): string {
   const squads = r.squads
     .map((s) => {
       const played = s.fixtures.filter((f) => f.sets_won != null);
@@ -35,10 +35,17 @@ export function seasonReportHtml(r: SeasonReport): string {
             )
             .join('')
         : '<tr><td colspan="6" class="muted">No rubbers played yet.</td></tr>';
+      const teamAwards = awards.find((a) => a.squad === s.name)?.awards ?? [];
+      const awardsHtml = teamAwards.length
+        ? `<h3>Awards</h3><table><tbody>${teamAwards
+            .map((a) => `<tr><td class="award">${esc(a.title)}</td><td>${esc(a.winner)}</td><td class="muted">${esc(a.detail)}</td></tr>`)
+            .join('')}</tbody></table>`
+        : '';
       return `
       <section>
         <h2>${esc(s.name)}</h2>
         <p class="sub">${s.division ? `${esc(s.division)} · ` : ''}Played ${played.length} · Won ${w} · Drawn ${d} · Lost ${l}${s.fees_outstanding_pence ? ` · Fees outstanding ${esc(formatPence(s.fees_outstanding_pence))}` : ''}</p>
+        ${awardsHtml}
         <h3>Fixtures</h3>
         <table><thead><tr><th>Date</th><th>Opponent</th><th>Result (sets)</th></tr></thead><tbody>${fixtures}</tbody></table>
         <h3>Players</h3>
@@ -66,6 +73,7 @@ export function seasonReportHtml(r: SeasonReport): string {
   .win { color: #2E624F; font-weight: 600; }
   .loss { color: #9D2925; font-weight: 600; }
   .muted { color: #7E6759; }
+  .award { font-weight: 600; color: #A93C28; white-space: nowrap; }
   footer { margin-top: 16px; color: #7E6759; font-size: 10px; }
 </style></head>
 <body>

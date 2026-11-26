@@ -417,3 +417,51 @@ export interface BorrowablePlayer {
   borrowed: boolean;
   injured: boolean;
 }
+
+export interface ResultSubmission {
+  fixture_id: number;
+  submitted_by: string | null;
+  matches: {
+    rubber_number: number;
+    player_1: string;
+    player_2: string;
+    set_1_won: number;
+    set_1_lost: number;
+    set_2_won: number;
+    set_2_lost: number;
+    champ_tie: 'W' | 'L' | null;
+  }[];
+  created_at: string;
+  submitter: { first_name: string; surname: string } | null;
+}
+
+export interface SelectionBalanceRow {
+  user_id: string;
+  name: string;
+  said_yes: number;
+  picked: number;
+  rubbers: number;
+  played_up: number;
+  fixtures: number;
+}
+
+export interface AwayPeriod {
+  id: number;
+  user_id: string;
+  starts_on: string;
+  ends_on: string;
+  note: string | null;
+}
+
+export interface Venue {
+  id: number;
+  club_id: number;
+  name: string;
+  address: string;
+  notes: string | null;
+}
+
+export interface SquadAwards {
+  squad: string;
+  awards: { title: string; winner: string; detail: string }[];
+}

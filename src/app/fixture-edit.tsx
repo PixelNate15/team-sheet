@@ -19,13 +19,16 @@ import {
   fetchFixtureTeam,
   fetchLeagueTable,
   fetchRecommendedTeam,
+  fetchVenues,
   saveFixture,
+  saveVenue,
   setFixtureFee,
 } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { errorMessage } from '@/lib/errors';
 import { formatForm, formatPence, parsePounds, shortTime, toIsoDate } from '@/lib/format';
 import { leaguePositionFor } from '@/lib/league';
+import { venueFor } from '@/lib/venues';
 import { useRefreshAll } from '@/lib/hooks';
 import { radius, space, useTheme } from '@/theme';
 
@@ -107,7 +110,7 @@ function FixtureForm({
 }) {
   const { c } = useTheme();
   const isNew = fixtureId == null;
-  const { activeSquad, me } = useSignedIn();
+  const { activeSquad, me, club, userId } = useSignedIn();
   const refresh = useRefreshAll();
 
   const replies = useQuery({ queryKey: ['availability', fixtureId], queryFn: () => fetchFixtureAvailability(fixtureId!), enabled: !isNew });
@@ -128,6 +131,19 @@ function FixtureForm({
     enabled: !!squad?.division_id,
   });
   const [autoPosition, setAutoPosition] = useState(false);
+  // Away venues come from the club's venue book.
+  const venues = useQuery({ queryKey: ['venues', club.id], queryFn: () => fetchVenues(club.id) });
+  const [autoVenue, setAutoVenue] = useState(false);
+  const venue = form.isHome === 'away' ? venueFor(form.opponentName, venues.data) : null;
+  const fillVenue = (opponent: string, isHome: 'home' | 'away') => {
+    const v = isHome === 'away' ? venueFor(opponent, venues.data) : null;
+    setForm((f) => {
+      if (v && (f.location.trim() === '' || autoVenue)) return { ...f, location: v.address };
+      if (!v && autoVenue) return { ...f, location: '' };
+      return f;
+    });
+    setAutoVenue(!!v && (form.location.trim() === '' || autoVenue));
+  };
   const [slots, setSlots] = useState<Slots>(initialSlots);
   const [teamTouched, setTeamTouched] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -187,6 +203,19 @@ function FixtureForm({
       }
       await refresh();
       router.back();
+      // An away venue we haven't saved yet: offer to add it to the venue book.
+      if (form.isHome === 'away' && form.location.trim() && !venueFor(form.opponentName, venues.data)) {
+        Alert.alert('Save this venue?', `Remember ${form.location.trim()} for future fixtures against ${form.opponentName.trim()}.`, [
+          { text: 'Not now', style: 'cancel' },
+          {
+            text: 'Save',
+            onPress: () =>
+              saveVenue({ clubId: club.id, userId, name: form.opponentName, address: form.location, notes: '' }).catch((e) =>
+                Alert.alert('Couldn’t save the venue', errorMessage(e)),
+              ),
+          },
+        ]);
+      }
     },
     onError: (e) => Alert.alert('Couldn’t save fixture', errorMessage(e)),
   });
@@ -242,6 +271,7 @@ function FixtureForm({
             return { ...f, opponentName: name };
           });
           setAutoPosition(pos != null && (form.leaguePosition === '' || autoPosition));
+          fillVenue(name, form.isHome);
         }}
         placeholder="e.g. Hillside LTC 2"
         error={errors.opponentName}
@@ -249,7 +279,10 @@ function FixtureForm({
       />
       <Segmented
         value={form.isHome}
-        onChange={set('isHome')}
+        onChange={(v) => {
+          set('isHome')(v);
+          fillVenue(form.opponentName, v);
+        }}
         options={[
           { value: 'home', label: 'Home' },
           { value: 'away', label: 'Away' },
@@ -259,7 +292,18 @@ function FixtureForm({
         <DateField label="Date" value={form.date} onChange={set('date')} minimumDate={isNew ? new Date() : undefined} />
         <TimeField label="Start" value={form.time} onChange={set('time')} />
       </View>
-      <TextField label="Venue" value={form.location} onChangeText={set('location')} placeholder="Club name or address" error={errors.location} maxLength={200} />
+      <TextField
+        label="Venue"
+        value={form.location}
+        onChangeText={(v) => {
+          setAutoVenue(false);
+          set('location')(v);
+        }}
+        placeholder="Club name or address"
+        error={errors.location}
+        maxLength={200}
+        hint={venue ? `From the venue book${venue.notes ? `: ${venue.notes}` : ''}` : undefined}
+      />
       <TextField
         label="Their league position (optional)"
         value={form.leaguePosition}

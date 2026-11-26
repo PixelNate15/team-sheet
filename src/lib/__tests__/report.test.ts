@@ -34,6 +34,15 @@ describe('seasonReportHtml', () => {
     expect(html).toMatch(/Tom Reid<\/td><td class="num">2<\/td><td class="num">4<\/td><td class="num">3<\/td><td class="num">75%<\/td><td class="num">0.55/);
   });
 
+  it('adds each team’s awards when given', () => {
+    const withAwards = seasonReportHtml(report, [
+      { squad: '1st Team', awards: [{ title: 'Most wins', winner: 'Tom <Reid>', detail: '3 of 4 rubbers' }] },
+    ]);
+    expect(withAwards).toContain('<h3>Awards</h3>');
+    expect(withAwards).toContain('Most wins</td><td>Tom &lt;Reid&gt;</td>');
+    expect(html).not.toContain('<h3>Awards</h3>');
+  });
+
   it('escapes names so they can’t break the page', () => {
     expect(html).toContain('Test &lt;Club&gt;');
     expect(html).toContain('St Mary&#39;s');

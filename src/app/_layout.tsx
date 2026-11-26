@@ -150,6 +150,8 @@ function RootNavigator() {
         />
         <Stack.Screen name="give-feedback/[matchId]" options={{ ...modal, title: 'Rate your partner' }} />
         <Stack.Screen name="injury" options={{ ...modal, title: 'Injury status' }} />
+        <Stack.Screen name="away-dates" options={{ ...modal, title: 'Away dates' }} />
+        <Stack.Screen name="send-result/[fixtureId]" options={{ ...modal, title: 'Send the score' }} />
         <Stack.Screen name="profile" options={{ ...modal, title: 'Profile' }} />
 
         <Stack.Protected guard={canCaptain}>

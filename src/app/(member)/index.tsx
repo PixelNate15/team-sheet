@@ -10,7 +10,7 @@ import { DateBlock } from '@/components/FixtureCard';
 import { Hero } from '@/components/Hero';
 import { Screen } from '@/components/Screen';
 import { Text } from '@/components/Text';
-import { fetchMessages, fetchMyFees } from '@/lib/api';
+import { fetchMessages, fetchMyFees, fetchPendingSubmissions } from '@/lib/api';
 import { useSignedIn } from '@/lib/auth';
 import { hasUnread } from '@/lib/chat-read';
 import { daysUntil, formatPence, fullDate, longDate, relativeDay, shortTime } from '@/lib/format';
@@ -31,6 +31,13 @@ export default function Home() {
   const needReply = fixtures.data?.filter((f) => f.is_available == null) ?? [];
   const needFeedback = feedbackToGive(results.data);
   const fees = useQuery({ queryKey: ['myFees'], queryFn: fetchMyFees });
+  const { managedSquads } = useSignedIn();
+  const submissions = useQuery({
+    queryKey: ['pendingSubmissions', managedSquads.map((s) => s.id).join(',')],
+    queryFn: () => fetchPendingSubmissions(managedSquads.map((s) => s.id)),
+    enabled: managedSquads.length > 0,
+  });
+  const toCheck = submissions.data ?? [];
   const owed = (fees.data ?? []).filter((f) => !f.paid && daysUntil(f.fixture_date) <= 0).reduce((n, f) => n + f.fee_pence, 0);
   const lastResult = results.groups[0];
 
@@ -87,10 +94,28 @@ export default function Home() {
 
       <ClubChatCard />
 
-      {needReply.length > 0 || needFeedback.length > 0 || owed > 0 ? (
+      {needReply.length > 0 || needFeedback.length > 0 || owed > 0 || toCheck.length > 0 ? (
         <>
           <SectionHeader title="To do" />
           <Card padded={false}>
+            {toCheck.map((s, i) => (
+              <View key={s.fixture_id}>
+                {i > 0 ? <View style={[styles.divider, { backgroundColor: c.border }]} /> : null}
+                <Pressable
+                  onPress={() => router.push({ pathname: '/result-entry/[fixtureId]', params: { fixtureId: String(s.fixture_id) } })}
+                  style={styles.todo}>
+                  <ListRow
+                    icon="checkmark-done-outline"
+                    tone="accent"
+                    title={`Check the result vs ${s.fixtures.opponent_name}`}
+                    subtitle={`${s.submitter?.first_name ?? 'A player'} sent the scores`}
+                  />
+                </Pressable>
+              </View>
+            ))}
+            {toCheck.length > 0 && (needReply.length > 0 || needFeedback.length > 0 || owed > 0) ? (
+              <View style={[styles.divider, { backgroundColor: c.border }]} />
+            ) : null}
             {needReply.length > 0 ? (
               <Pressable onPress={() => router.push('/fixtures')} style={styles.todo}>
                 <ListRow
